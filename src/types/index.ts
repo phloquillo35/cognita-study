@@ -17,10 +17,15 @@ export interface Subject {
   career: string;
   credits: number;
   hoursPerWeek: number;
+  totalHours: number;
+  recoveryNote: number;
   description: string;
   topics: Topic[];
   prerequisites: string[];
   category: SubjectCategory;
+  difficulty: number;
+  studyHoursPerWeek: number;
+  keyConcepts: string[];
 }
 
 export type SubjectCategory =
