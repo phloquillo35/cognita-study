@@ -301,7 +301,7 @@ Cada una de las 36 materias incluye:
 ## Lo que Queda Pendiente
 
 ### Prioridad Alta
-- [ ] **Conectar IA real**: Configurar `OPENAI_API_KEY` en `.env.local` para activar el tutor streaming
+- [x] **Conectar IA real**: Configurar `OPENAI_API_KEY` en `.env.local` y conectar el tutor Socrático con OpenAI GPT-4o-mini
 - [ ] **PostgreSQL database**: Configurar en Vercel/Neon y ejecutar `npx prisma db push`
 - [ ] **Login funcional**: Configurar credenciales de GitHub OAuth y Google OAuth en NextAuth
 - [ ] **Mostrar datos nuevos en UI**: Actualizar `/subject/[id]` para mostrar bibliografía, metodología, evaluación, objetivos, competencias y ejercicios tipo parcial

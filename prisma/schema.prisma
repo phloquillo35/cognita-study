@@ -93,6 +93,7 @@ model Subject {
   notes         Note[]
   flashcards    Flashcard[]
   studyPlans    StudyPlan[]
+  chatMessages  ChatMessage[]
 
   @@map("subjects")
 }
@@ -232,8 +233,8 @@ model ChatMessage {
   timestamp  DateTime @default(now())
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subject Subject? @relation(fields: [subjectId], references: [id])
-  topic   Topic?   @relation(fields: [topicId], references: [id])
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  topic   Topic?   @relation(fields: [topicId], references: [id], onDelete: Cascade)
 
   @@map("chat_messages")
 }

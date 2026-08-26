@@ -2,17 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Send,
-  Brain,
-  User,
-  Sparkles,
-  ArrowLeft,
-  BookOpen,
-} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import Link from "next/link";
+import { Send, Brain, User, Sparkles, ArrowLeft, BookOpen } from "lucide-react";
 
 interface Message {
   id: string;
@@ -36,40 +29,6 @@ Puedo ayudarte con:
   timestamp: new Date(),
 };
 
-const SAMPLE_RESPONSES: Record<string, string> = {
-  default: `Entiendo tu pregunta. Como tutor Socrático, voy a guiarte paso a paso:
-
-1. **Identifiquemos** el concepto clave
-2. **Construyamos** el razonamiento juntos
-3. **Resolvamos** el problema
-
-¿Podrías contarme qué ya sabés sobre este tema? Así puedo adaptar mi explicación a tu nivel.`,
-  matematica: `¡Excelente elección! La matemática es fundamental para la ingeniería.
-
-Para ayudarte mejor, necesito que me digas:
-• **¿Qué tema específico?** (ej: derivadas, integrales, matrices)
-• **¿Qué nivel?** (ej: estoy aprendiendo, necesito repasar, o quiero ejercicios difíciles)
-• **¿Tenés algún ejercicio concreto?**
-
-Mientras tanto, recordá que en Cognita Study puedo:
-✅ Explicarte conceptos con ejemplos
-✅ Guiarte paso a paso en ejercicios
-✅ Verificar tus respuestas con motor matemático
-✅ Generar ejercicios adaptativos`,
-  fisica: `La física es apasionante y muy aplicada a la ingeniería.
-
-Contame:
-• **¿Qué rama?** (Mecánica, Electromagnetismo, Termodinámica)
-• **¿Qué tipo de problema?** (Conceptual, matemático, de aplicación)
-• **¿Hay algún ejercicio específico que necesites resolver?**
-
-Puedo ayudarte con:
-📐 Explicaciones con diagrams
-📊 Resolución paso a paso
-🔬 Conexiones con el mundo real
-📝 Ejercicios personalizados`,
-};
-
 export default function TutorPage() {
   const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
   const [input, setInput] = useState("");
@@ -79,6 +38,63 @@ export default function TutorPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const getSystemPrompt = (userInput: string) => {
+    const lower = userInput.toLowerCase();
+
+    if (lower.includes("matem") || lower.includes("calculo") || lower.includes("algebra") || lower.includes("derivada") || lower.includes("integral")) {
+      return `Soy un tutor Socrático de matemáticas para la carrera de Ingeniería en Sistemas de Información en la UTN Facultad Regional Tucumán. El estudiante está preguntando sobre: "${userInput}".
+
+Principios del tutor Socrático:
+1. NUNCA des respuestas directas. Siempre formulá preguntas guiadas que ayuden al estudiante a descubrir el concepto por sí mismo.
+2. Ayudá al estudiante a identificar el concepto clave primero.
+3. Construí el razonamiento paso a paso.
+4. Si el estudiante se atascá, ofrecé una pista socrática, no la solución.
+5. Conectá el concepto con ejemplos de la vida real cuando sea posible.
+6. Motivá al estudiante a seguir intentándolo.
+
+Soy el tutor de Cognita Study. Ayudá al estudiante a aprender matemáticas mediante preguntas guiadas, no respuestas directas.`;
+
+    } else if (lower.includes("física") || lower.includes("fisica") || lower.includes("mecánica") || lower.includes("electromagnetismo") || lower.includes("termodinámica")) {
+      return `Soy un tutor Socrático de física para la carrera de Ingeniería en Sistemas de Información en la UTN Facultad Regional Tucumán. El estudiante está preguntando sobre: "${userInput}".
+
+Principios del tutor Socrático:
+1. NUNCA des respuestas directas. Siempre formulá preguntas guiadas que ayuden al estudiante a descubrir el concepto por sí mismo.
+2. Ayudá al estudiante a identificar el concepto clave primero.
+3. Construí el razonamiento paso a paso.
+4. Si el estudiante se atascá, ofrecé una pista socrática, no la solución.
+5. Conectá el concepto con ejemplos de la vida real cuando sea posible.
+6. Motivá al estudiante a seguir intentándolo.
+
+Soy el tutor de Cognita Study. Ayudá al estudiante a aprender física mediante preguntas guiadas, no respuestas directas.`;
+
+    } else if (lower.includes("programación") || lower.includes("codigo") || lower.includes("codigo") || lower.includes("algoritmo") || lower.includes("estructura de datos")) {
+      return `Soy un tutor Socrático de programación para la carrera de Ingeniería en Sistemas de Información en la UTN Facultad Regional Tucumán. El estudiante está preguntando sobre: "${userInput}".
+
+Principios del tutor Socrático:
+1. NUNCA des respuestas directas. Siempre formulá preguntas guiadas que ayuden al estudiante a descubrir el concepto por sí mismo.
+2. Ayudá al estudiante a identificar el concepto clave primero.
+3. Construí el razonamiento paso a paso.
+4. Si el estudiante se atascá, ofrecé una pista socrática, no la solución.
+5. Conectá el concepto con ejemplos de la vida real cuando sea posible.
+6. Motivá al estudiante a seguir intentándolo.
+
+Soy el tutor de Cognita Study. Ayudá al estudiante a aprender programación mediante preguntas guiadas, no respuestas directas.`;
+
+    } else {
+      return `Soy un tutor Socrático para la carrera de Ingeniería en Sistemas de Información en la UTN Facultad Regional Tucumán. El estudiante está preguntando sobre: "${userInput}".
+
+Principios del tutor Socrático:
+1. NUNCA des respuestas directas. Siempre formulá preguntas guiadas que ayuden al estudiante a descubrir el concepto por sí mismo.
+2. Ayudá al estudiante a identificar el concepto clave primero.
+3. Construí el razonamiento paso a paso.
+4. Si el estudiante se atascá, ofrecé una pista socrática, no la solución.
+5. Conectá el concepto con ejemplos de la vida real cuando sea posible.
+6. Motivá al estudiante a seguir intentándolo.
+
+Soy el tutor de Cognita Study. Ayudá al estudiante a aprender mediante preguntas guiadas, no respuestas directas.`;
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
@@ -94,27 +110,58 @@ export default function TutorPage() {
     setInput("");
     setIsTyping(true);
 
-    // Simulate AI response (will be replaced with real API)
-    setTimeout(() => {
-      const lowerInput = input.toLowerCase();
-      let response = SAMPLE_RESPONSES.default;
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: getSystemPrompt(input) },
+            { role: "user", content: input },
+          ],
+          temperature: 0.7,
+        }),
+      });
 
-      if (lowerInput.includes("matem") || lowerInput.includes("calculo") || lowerInput.includes("algebra")) {
-        response = SAMPLE_RESPONSES.matematica;
-      } else if (lowerInput.includes("física") || lowerInput.includes("fisica") || lowerInput.includes("mecánica")) {
-        response = SAMPLE_RESPONSES.fisica;
+      if (!response.ok) {
+        throw new Error("Error en la API de OpenAI");
       }
+
+      const data = await response.json();
+      const assistantContent = data.choices[0]?.message?.content || "No se pudo obtener la respuesta";
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: response,
+        content: assistantContent,
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("Error en la IA:", error);
+
+      const fallbackMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: `Entiendo tu pregunta sobre "${input}". Como tutor Socrático, te guiaré con preguntas:
+
+        1. **¿Qué concepto clave** creés que está involucrado en tu pregunta?
+        2. **¿Cómo podrías acercarte** al problema paso a paso?
+        3. **¿Qué información** tenés que aún no conocés?
+
+        Intentá responderte a vos mismo primero, y yo puedo ayudarte a refinarte. ¿Por dónde empezás?`,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, fallbackMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -130,7 +177,9 @@ export default function TutorPage() {
       <header className="flex items-center gap-4 border-b border-[var(--border)] bg-[var(--background)]/80 px-4 py-3 backdrop-blur-xl">
         <Link href="/">
           <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
+            <button aria-label="Volver al inicio">
+              <ArrowLeft className="h-5 w-5" />
+            </button>
           </Button>
         </Link>
         <div className="flex items-center gap-3">
@@ -231,7 +280,7 @@ export default function TutorPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Escribí tu pregunta... (Shift+Enter para nueva línea)"
+              placeholder="Escribí tu pregunta..."
               className="flex-1 resize-none rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
               rows={1}
               disabled={isTyping}

@@ -15,6 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
+import MaterialList from "@/components/study/MaterialList";
 import { getSubjectById, CATEGORY_COLORS, CATEGORY_LABELS } from "@/data/curriculum";
 import Link from "next/link";
 import type { SubjectCategory } from "@/types";
@@ -208,6 +209,163 @@ export default function SubjectPage() {
           </div>
         </motion.section>
 
+        {/* Bibliography */}
+        {subject.bibliography.official.length > 0 || subject.bibliography.complementary.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mb-8"
+          >
+            <h2 className="mb-3 text-lg font-semibold">Bibliografía</h2>
+            <div className="space-y-2">
+              {subject.bibliography.official.map((book, idx) => (
+                <div key={`bib-official-${idx}`} className="flex items-start gap-3">
+                  <div className="flex-shrink-0 h-8 w-8 rounded-bg-[var(--primary)]/10 flex items-center justify-center">
+                    <BookOpen className="h-4 w-4 text-[var(--primary)]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{book}</p>
+                  </div>
+                </div>
+              ))}
+              {subject.bibliography.complementary.map((book, idx) => (
+                <div key={`bib-complementary-${idx}`} className="flex items-start gap-3 my-2">
+                  <div className="flex-shrink-0 h-8 w-8 rounded-bg-[var(--secondary)]/10 flex items-center justify-center">
+                    <BookOpen className="h-4 w-4 text-[var(--secondary)]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{book}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Metodología */}
+        {subject.methodology.theory.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="mb-8"
+          >
+            <h2 className="mb-3 text-lg font-semibold">Metodología</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div>
+                <h3 className="font-medium text-sm">Teoría</h3>
+                <p className="text-sm text-[var(--muted-foreground)] line-clamp-3">{subject.methodology.theory}</p>
+              </div>
+              <div>
+                <h3 className="font-medium text-sm">Práctica</h3>
+                <p className="text-sm text-[var(--muted-foreground)] line-clamp-3">{subject.methodology.practice}</p>
+              </div>
+              {subject.methodology.activities.length > 0 && (
+                <div>
+                  <h3 className="font-medium text-sm">Actividades</h3>
+                  <ul className="list-disc pl-5 text-sm text-[var(--muted-foreground)]">
+                    {subject.methodology.activities.map((act, i) => (
+                      <li key={i}>{act}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Evaluación */}
+        {subject.evaluation.regularity.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="mb-8"
+          >
+            <h2 className="mb-3 text-lg font-semibold">Evaluación</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-3 rounded bg-[var(--primary)]/10">
+                <p className="font-small text-[var(--muted-foreground)]">Regularidad</p>
+                <p className="font-medium">{subject.evaluation.regularity}</p>
+              </div>
+              <div className="p-3 rounded bg-[var(--success)]/10">
+                <p className="font-small text-[var(--muted-foreground)]">Promoción</p>
+                <p className="font-medium">{subject.evaluation.promotion}</p>
+              </div>
+              <div className="p-3 rounded bg-[var(--warning)]/10">
+                <p className="font-small text-[var(--muted-foreground)]">Recuperatorio</p>
+                <p className="font-medium">{subject.evaluation.recovery}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Objetivos de Aprendizaje */}
+        {subject.objectives.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="mb-8"
+          >
+            <h2 className="mb-3 text-lg font-semibold">Objetivos de Aprendizaje</h2>
+            <ul className="list-disc pl-5 text-sm text-[var(--muted-foreground)]">
+              {subject.objectives.map((obj, i) => (
+                <li key={i}>{obj}</li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
+
+        {/* Competencias */}
+        {subject.competencies.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+            className="mb-8"
+          >
+            <h2 className="mb-3 text-lg font-semibold">Competencias</h2>
+            <ul className="list-disc pl-5 text-sm text-[var(--muted-foreground)]">
+              {subject.competencies.map((comp, i) => (
+                <li key={i}>{comp}</li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
+
+        {/* Ejercicios Tipo Parcial */}
+        {subject.partialExamples.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0 }}
+            className="mb-8"
+          >
+            <h2 className="mb-3 text-lg font-semibold">Ejercicios Tipo Parcial</h2>
+            <div className="space-y-3">
+              {subject.partialExamples.map((ex, idx) => (
+                <Card key={ex.topic} className="group cursor-pointer transition-all hover:border-[var(--primary)]/30 hover:shadow-md">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="flex-shrink-0 h-5 w-5 rounded-bg-[var(--primary)]/10 flex items-center justify-center">
+                        <BookOpen className="h-3 w-3 text-[var(--primary)]" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">{ex.topic}</h3>
+                        <p className="text-xs text-[var(--muted-foreground)]">{ex.difficulty}/5</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-[var(--muted-foreground)]">{ex.question}</p>
+                    <p className="text-xs text-[var(--primary)] font-medium">Solución: {ex.solution}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {/* Quick Actions */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -260,6 +418,10 @@ export default function SubjectPage() {
             </CardContent>
           </Card>
         </motion.section>
+
+        {/* Materiales de Drive */}
+        <MaterialList subjectId={subjectId} />
+
       </main>
     </div>
   );
