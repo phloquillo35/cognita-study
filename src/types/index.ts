@@ -26,6 +26,37 @@ export interface Subject {
   difficulty: number;
   studyHoursPerWeek: number;
   keyConcepts: string[];
+  bibliography: Bibliography;
+  methodology: Methodology;
+  evaluation: Evaluation;
+  objectives: string[];
+  competencies: string[];
+  partialExamples: PartialExample[];
+}
+
+export interface Bibliography {
+  official: string[];
+  complementary: string[];
+}
+
+export interface Methodology {
+  theory: string;
+  practice: string;
+  activities: string[];
+}
+
+export interface Evaluation {
+  regularity: string;
+  promotion: string;
+  recovery: string;
+  criteria: string[];
+}
+
+export interface PartialExample {
+  topic: string;
+  question: string;
+  difficulty: number;
+  solution: string;
 }
 
 export type SubjectCategory =
