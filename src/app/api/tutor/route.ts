@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { streamText } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
 
 const SOCRATIC_SYSTEM_PROMPT = `Eres el Tutor IA de Cognita Study, una plataforma de estudio universitario para la carrera de Ingeniería en Sistemas de Información en la UTN de Tucumán, Argentina.
 
@@ -24,38 +26,52 @@ FORMATO:
 - Sé conciso pero completo
 - Siempre terminá con una pregunta guía para el siguiente paso`;
 
+export const runtime = "edge";
+
 export async function POST(request: NextRequest) {
   try {
     const { messages, subjectId } = await request.json();
 
     if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json(
-        { error: "Messages array is required" },
-        { status: 400 }
+      return new Response(
+        JSON.stringify({ error: "Messages array is required" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    const apiMessages = [
-      { role: "system", content: SOCRATIC_SYSTEM_PROMPT },
-      ...messages.map((msg: { role: string; content: string }) => ({
-        role: msg.role,
-        content: msg.content,
-      })),
-    ];
+    if (process.env.OPENAI_API_KEY) {
+      const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    // TODO: Replace with real OpenAI/Anthropic API call
-    // For now, return a mock response
-    const mockResponse = generateMockResponse(messages[messages.length - 1]?.content || "");
+      const result = streamText({
+        model: openai("gpt-4o-mini"),
+        system: SOCRATIC_SYSTEM_PROMPT,
+        messages: messages.map((msg: { role: string; content: string }) => ({
+          role: msg.role as "user" | "assistant" | "system",
+          content: msg.content,
+        })),
+        onFinish: async ({ text }) => {
+          if (subjectId) {
+            console.log(`Tutor response for subject ${subjectId}: ${text.length} chars`);
+          }
+        },
+      });
 
-    return NextResponse.json({
-      content: mockResponse,
-      role: "assistant",
-    });
+      return result.toUIMessageStreamResponse();
+    }
+
+    const mockResponse = generateMockResponse(
+      messages[messages.length - 1]?.content || ""
+    );
+
+    return new Response(
+      JSON.stringify({ content: mockResponse, role: "assistant" }),
+      { headers: { "Content-Type": "application/json" } }
+    );
   } catch (error) {
     console.error("Tutor API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
+    return new Response(
+      JSON.stringify({ error: "Internal server error" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }
@@ -76,7 +92,7 @@ Antes de darte la respuesta, dejame guiarte:
 3. **Para calcularla**, empezá por identificar:
    - ¿La función es una de las básicas que ya conocés? ($x^n$, $\\sin x$, $e^x$, etc.)
    - ¿Estás ante una composición (regla de la cadena)?
-   - ¿Hay una división de funciones (regla del cociente)?
+   - Hay una división de funciones (regla del cociente)?
 
 **¿Podés decirme qué función específica querés derivar? Así te guío paso a paso.** 📐`;
   }
@@ -95,7 +111,7 @@ Pensemos juntos:
    - ¿Necesitás sustitución?
    - ¿Necesitás integración por partes?
 
-**¿Qué función necesitás integrar? Y más importante: ¿cuál es tu primer instincts sobre cómo resolverla?** 🧠`;
+**¿Qué función necesitás integrar? Y más importante: ¿cuál es tu primer instinto sobre cómo resolverla?** 🧠`;
   }
 
   if (lower.includes("física") || lower.includes("fisica") || lower.includes("fuerza") || lower.includes("newton")) {

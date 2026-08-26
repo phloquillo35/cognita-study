@@ -108,7 +108,7 @@ export interface StudyPlanTopic {
 
 export interface Note {
   id: string;
-  userId: string;
+  userId?: string;
   subjectId: string;
   title: string;
   content: string;
@@ -129,7 +129,7 @@ export interface ChatMessage {
 
 export interface Flashcard {
   id: string;
-  userId: string;
+  userId?: string;
   subjectId: string;
   front: string;
   back: string;
@@ -139,4 +139,9 @@ export interface Flashcard {
   nextReview: Date;
   reviewCount: number;
   correctCount: number;
+  interval: number;
+  easeFactor: number;
+  repetitions: number;
+  lastReviewed?: Date;
+  createdAt: Date;
 }
