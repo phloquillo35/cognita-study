@@ -1,0 +1,239 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  university    String    @default("UTN - FRT")
+  career        String    @default("Ingeniería en Sistemas de Información")
+  currentLevel  Int       @default(1)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts    Account[]
+  sessions    Session[]
+  progress    UserProgress[]
+  exercises   ExerciseResult[]
+  studyPlans  StudyPlan[]
+  notes       Note[]
+  flashcards  Flashcard[]
+  chatHistory ChatMessage[]
+
+  @@map("users")
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Subject {
+  id            String   @id
+  name          String
+  code          String   @unique
+  level         Int
+  career        String
+  credits       Int
+  hoursPerWeek  Int
+  description  String
+  category      String
+  prerequisites String[]
+
+  topics        Topic[]
+  progress      UserProgress[]
+  exercises     Exercise[]
+  notes         Note[]
+  flashcards    Flashcard[]
+  studyPlans    StudyPlan[]
+
+  @@map("subjects")
+}
+
+model Topic {
+  id              String  @id
+  subjectId       String
+  name            String
+  description     String
+  difficulty      Int
+  estimatedMinutes Int
+
+  subject    Subject          @relation(fields: [subjectId], references: [id])
+  exercises  Exercise[]
+  progress   UserProgress[]
+  chatHistory ChatMessage[]
+
+  @@map("topics")
+}
+
+model UserProgress {
+  id              String   @id @default(cuid())
+  userId          String
+  subjectId       String
+  topicId         String
+  masteryLevel    Float    @default(0)
+  lastPracticed   DateTime @default(now())
+  streak          Int      @default(0)
+  totalExercises  Int      @default(0)
+  correctAnswers  Int      @default(0)
+  averageTime     Float    @default(0)
+  nextReview      DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id])
+  topic   Topic   @relation(fields: [topicId], references: [id])
+
+  @@unique([userId, subjectId, topicId])
+  @@map("user_progress")
+}
+
+model Exercise {
+  id           String  @id
+  topicId      String
+  subjectId    String
+  type         String
+  difficulty   Int
+  question     String
+  questionLatex String?
+  answer       String
+  answerLatex  String?
+  solution     String?
+  solutionLatex String?
+  hints        String[]
+
+  topic   Topic           @relation(fields: [topicId], references: [id])
+  subject Subject         @relation(fields: [subjectId], references: [id])
+  results ExerciseResult[]
+
+  @@map("exercises")
+}
+
+model ExerciseResult {
+  id          String   @id @default(cuid())
+  userId      String
+  exerciseId  String
+  correct     Boolean
+  timeSpent   Float
+  userAnswer  String
+  hintsUsed   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id])
+
+  @@map("exercise_results")
+}
+
+model StudyPlan {
+  id            String   @id @default(cuid())
+  userId        String
+  subjectId     String
+  targetDate    DateTime
+  dailyMinutes  Int
+  completed     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id])
+
+  @@map("study_plans")
+}
+
+model Note {
+  id          String   @id @default(cuid())
+  userId      String
+  subjectId   String
+  title       String
+  content     String
+  contentLatex String?
+  tags        String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id])
+
+  @@map("notes")
+}
+
+model Flashcard {
+  id            String   @id @default(cuid())
+  userId        String
+  subjectId     String
+  front         String
+  back          String
+  frontLatex    String?
+  backLatex     String?
+  difficulty    Int      @default(1)
+  nextReview    DateTime @default(now())
+  reviewCount   Int      @default(0)
+  correctCount  Int      @default(0)
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id])
+
+  @@map("flashcards")
+}
+
+model ChatMessage {
+  id         String   @id @default(cuid())
+  userId     String
+  subjectId  String?
+  topicId    String?
+  role       String
+  content    String
+  timestamp  DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject? @relation(fields: [subjectId], references: [id])
+  topic   Topic?   @relation(fields: [topicId], references: [id])
+
+  @@map("chat_messages")
+}

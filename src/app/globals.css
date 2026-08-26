@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+:root {
+  --background: #FAFBFC;
+  --foreground: #0A0A0F;
+  --card: #FFFFFF;
+  --card-foreground: #0A0A0F;
+  --primary: #6366F1;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F1F5F9;
+  --secondary-foreground: #0F172A;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #F1F5F9;
+  --accent-foreground: #0F172A;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #6366F1;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --info: #3B82F6;
+  --math: #8B5CF6;
+  --physics: #F97316;
+  --cs: #06B6D4;
+  --engineering: #10B981;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: #0A0A0F;
+  --foreground: #F8FAFC;
+  --card: #111827;
+  --card-foreground: #F8FAFC;
+  --primary: #818CF8;
+  --primary-foreground: #0A0A0F;
+  --secondary: #1E293B;
+  --secondary-foreground: #F8FAFC;
+  --muted: #1E293B;
+  --muted-foreground: #94A3B8;
+  --accent: #1E293B;
+  --accent-foreground: #F8FAFC;
+  --destructive: #F87171;
+  --destructive-foreground: #0A0A0F;
+  --border: #1E293B;
+  --input: #1E293B;
+  --ring: #818CF8;
+  --success: #4ADE80;
+  --warning: #FBBF24;
+  --info: #60A5FA;
+  --math: #A78BFA;
+  --physics: #FB923C;
+  --cs: #22D3EE;
+  --engineering: #34D399;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .dark .glass {
+    background: rgba(17, 24, 39, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, var(--primary), var(--cs));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glow {
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.15);
+  }
+
+  .dark .glow {
+    box-shadow: 0 0 60px rgba(129, 140, 248, 0.1);
+  }
+}
