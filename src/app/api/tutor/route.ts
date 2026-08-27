@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { streamText } from "ai";
+import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 
 const SOCRATIC_SYSTEM_PROMPT = `Eres el Tutor IA de Cognita Study, una plataforma de estudio universitario para la carrera de Ingeniería en Sistemas de Información en la UTN de Tucumán, Argentina.
@@ -24,9 +24,9 @@ FORMATO:
 - Usá Markdown para estructurar tu respuesta
 - Para matemática/física, usá LaTeX con $...$ para inline y $$...$$ para display
 - Sé conciso pero completo
-- Siempre terminá con una pregunta guía para el siguiente paso`;
+  - Siempre terminá con una pregunta guía para el siguiente paso`;
 
-export const runtime = "edge";
+const MAX_TOTAL_CHARS = 20000;
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,24 +39,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const totalChars = messages.reduce(
+      (acc: number, m: { content?: string }) => acc + (m.content?.length || 0),
+      0
+    );
+    if (totalChars > MAX_TOTAL_CHARS) {
+      return new Response(
+        JSON.stringify({ error: "Message content exceeds size limit" }),
+        { status: 413, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     if (process.env.OPENAI_API_KEY) {
       const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-      const result = streamText({
+      const result = await generateText({
         model: openai("gpt-4o-mini"),
         system: SOCRATIC_SYSTEM_PROMPT,
+        maxTokens: 1200,
         messages: messages.map((msg: { role: string; content: string }) => ({
           role: msg.role as "user" | "assistant" | "system",
           content: msg.content,
         })),
-        onFinish: async ({ text }) => {
-          if (subjectId) {
-            console.log(`Tutor response for subject ${subjectId}: ${text.length} chars`);
-          }
-        },
       });
 
-      return result.toUIMessageStreamResponse();
+      if (subjectId) {
+        console.log(
+          `Tutor response for subject ${subjectId}: ${result.text.length} chars`
+        );
+      }
+
+      return new Response(JSON.stringify({ content: result.text }), {
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const mockResponse = generateMockResponse(

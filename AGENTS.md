@@ -41,7 +41,7 @@ Plataforma de estudio universitario con inteligencia artificial para la carrera 
 ### UI Components
 | Tecnología | Uso |
 |-----------|-----|
-| Radix UI | Primitivas accesibles (Dialog, Dropdown, Tabs, Progress, etc.) |
+| Radix UI | Solo `@radix-ui/react-slot` (vía Button); el resto de primitivas no se usan |
 | CVA (Class Variance Authority) | Variantes de componentes |
 | clsx + tailwind-merge | Utilidades de clases |
 
@@ -58,7 +58,7 @@ Plataforma de estudio universitario con inteligencia artificial para la carrera 
 | Tecnología | Uso |
 |-----------|-----|
 | OpenAI GPT-4o-mini | Tutor IA Socrático |
-| Vercel AI SDK (streamText) | Streaming de respuestas |
+| Vercel AI SDK (generateText) | Respuestas del Tutor vía /api/tutor (server-side) |
 | SM-2 Algorithm | Repetición espaciada para flashcards |
 
 ### Otros
@@ -78,7 +78,7 @@ cognita-study/
 │   ├── manifest.json          # PWA manifest
 │   └── sw.js                  # Service Worker offline
 ├── prisma/
-│   └── schema.prisma          # Schema de PostgreSQL (12 modelos)
+│   └── schema.prisma          # Schema PostgreSQL (13 modelos) — NOTA: no cableado aún; la app persiste en localStorage
 ├── src/
 │   ├── app/
 │   │   ├── page.tsx           # Dashboard principal (Bento Grid)
@@ -112,7 +112,6 @@ cognita-study/
 │   │   │   ├── Card.tsx       # Tarjetas
 │   │   │   └── Progress.tsx   # Barra de progreso
 │   │   ├── layout/
-│   │   │   ├── Navbar.tsx     # Navegación responsive
 │   │   │   └── ThemeProvider.tsx # next-themes wrapper
 │   │   └── study/
 │   │       └── LatexRenderer.tsx # Renderizado KaTeX
@@ -133,7 +132,6 @@ cognita-study/
 ├── AGENTS.md                  # Este archivo
 ├── next.config.ts             # Configuración Next.js
 ├── package.json               # Dependencias
-├── tailwind.config.ts         # Configuración Tailwind
 └── tsconfig.json              # Configuración TypeScript
 ```
 
@@ -149,11 +147,11 @@ cognita-study/
 - Navegación a detalle de cada materia
 
 ### 2. Tutor IA Socrático (`/tutor`)
-- Interfaz de chat con streaming en tiempo real
+- Interfaz de chat que consume `/api/tutor` (server-side, la API key nunca se expone al cliente)
 - Prompt Socrático: guía con preguntas, nunca da respuestas directas
 - Detección de temas (matemática, física, programación)
 - Soporte LaTeX para fórmulas matemáticas
-- API route con OpenAI GPT-4o-mini + fallback mock
+- API route con OpenAI GPT-4o-mini (`maxTokens: 1200`) + fallback mock cuando no hay `OPENAI_API_KEY`
 
 ### 3. Práctica Adaptativa (`/practice`)
 - Selector de materia
@@ -314,7 +312,7 @@ Cada una de las 36 materias incluye:
 - [ ] **Estadísticas avanzadas**: Gráficos de progreso, heatmap de estudio, streaks
 
 ### Prioridad Baja
-- [ ] **PWA icons**: Crear iconos 192x192 y 512x512 para manifest
+- [x] **PWA icons**: Iconos SVG en `/public/icons` referenciados desde el manifest
 - [ ] **Tests unitarios**: Agregar test suite con Vitest/Jest
 - [ ] **Deploy en Vercel**: Configurar CI/CD
 - [ ] **Notificaciones push**: Alertas de estudio y recordatorios

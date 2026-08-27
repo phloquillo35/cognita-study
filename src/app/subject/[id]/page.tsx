@@ -221,7 +221,7 @@ export default function SubjectPage() {
             <div className="space-y-2">
               {subject.bibliography.official.map((book, idx) => (
                 <div key={`bib-official-${idx}`} className="flex items-start gap-3">
-                  <div className="flex-shrink-0 h-8 w-8 rounded-bg-[var(--primary)]/10 flex items-center justify-center">
+                  <div className="flex-shrink-0 h-8 w-8 rounded bg-[var(--primary)]/10 flex items-center justify-center">
                     <BookOpen className="h-4 w-4 text-[var(--primary)]" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -231,7 +231,7 @@ export default function SubjectPage() {
               ))}
               {subject.bibliography.complementary.map((book, idx) => (
                 <div key={`bib-complementary-${idx}`} className="flex items-start gap-3 my-2">
-                  <div className="flex-shrink-0 h-8 w-8 rounded-bg-[var(--secondary)]/10 flex items-center justify-center">
+                  <div className="flex-shrink-0 h-8 w-8 rounded bg-[var(--secondary)]/10 flex items-center justify-center">
                     <BookOpen className="h-4 w-4 text-[var(--secondary)]" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -286,15 +286,15 @@ export default function SubjectPage() {
             <h2 className="mb-3 text-lg font-semibold">Evaluación</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="p-3 rounded bg-[var(--primary)]/10">
-                <p className="font-small text-[var(--muted-foreground)]">Regularidad</p>
+                <p className="text-sm text-[var(--muted-foreground)]">Regularidad</p>
                 <p className="font-medium">{subject.evaluation.regularity}</p>
               </div>
               <div className="p-3 rounded bg-[var(--success)]/10">
-                <p className="font-small text-[var(--muted-foreground)]">Promoción</p>
+                <p className="text-sm text-[var(--muted-foreground)]">Promoción</p>
                 <p className="font-medium">{subject.evaluation.promotion}</p>
               </div>
               <div className="p-3 rounded bg-[var(--warning)]/10">
-                <p className="font-small text-[var(--muted-foreground)]">Recuperatorio</p>
+                <p className="text-sm text-[var(--muted-foreground)]">Recuperatorio</p>
                 <p className="font-medium">{subject.evaluation.recovery}</p>
               </div>
             </div>
@@ -349,7 +349,7 @@ export default function SubjectPage() {
                 <Card key={ex.topic} className="group cursor-pointer transition-all hover:border-[var(--primary)]/30 hover:shadow-md">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="flex-shrink-0 h-5 w-5 rounded-bg-[var(--primary)]/10 flex items-center justify-center">
+                       <div className="flex-shrink-0 h-5 w-5 rounded bg-[var(--primary)]/10 flex items-center justify-center">
                         <BookOpen className="h-3 w-3 text-[var(--primary)]" />
                       </div>
                       <div>

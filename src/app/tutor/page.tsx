@@ -39,63 +39,6 @@ export default function TutorPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const getSystemPrompt = (userInput: string) => {
-    const lower = userInput.toLowerCase();
-
-    if (lower.includes("matem") || lower.includes("calculo") || lower.includes("algebra") || lower.includes("derivada") || lower.includes("integral")) {
-      return `Soy un tutor Socrático de matemáticas para la carrera de Ingeniería en Sistemas de Información en la UTN Facultad Regional Tucumán. El estudiante está preguntando sobre: "${userInput}".
-
-Principios del tutor Socrático:
-1. NUNCA des respuestas directas. Siempre formulá preguntas guiadas que ayuden al estudiante a descubrir el concepto por sí mismo.
-2. Ayudá al estudiante a identificar el concepto clave primero.
-3. Construí el razonamiento paso a paso.
-4. Si el estudiante se atascá, ofrecé una pista socrática, no la solución.
-5. Conectá el concepto con ejemplos de la vida real cuando sea posible.
-6. Motivá al estudiante a seguir intentándolo.
-
-Soy el tutor de Cognita Study. Ayudá al estudiante a aprender matemáticas mediante preguntas guiadas, no respuestas directas.`;
-
-    } else if (lower.includes("física") || lower.includes("fisica") || lower.includes("mecánica") || lower.includes("electromagnetismo") || lower.includes("termodinámica")) {
-      return `Soy un tutor Socrático de física para la carrera de Ingeniería en Sistemas de Información en la UTN Facultad Regional Tucumán. El estudiante está preguntando sobre: "${userInput}".
-
-Principios del tutor Socrático:
-1. NUNCA des respuestas directas. Siempre formulá preguntas guiadas que ayuden al estudiante a descubrir el concepto por sí mismo.
-2. Ayudá al estudiante a identificar el concepto clave primero.
-3. Construí el razonamiento paso a paso.
-4. Si el estudiante se atascá, ofrecé una pista socrática, no la solución.
-5. Conectá el concepto con ejemplos de la vida real cuando sea posible.
-6. Motivá al estudiante a seguir intentándolo.
-
-Soy el tutor de Cognita Study. Ayudá al estudiante a aprender física mediante preguntas guiadas, no respuestas directas.`;
-
-    } else if (lower.includes("programación") || lower.includes("codigo") || lower.includes("codigo") || lower.includes("algoritmo") || lower.includes("estructura de datos")) {
-      return `Soy un tutor Socrático de programación para la carrera de Ingeniería en Sistemas de Información en la UTN Facultad Regional Tucumán. El estudiante está preguntando sobre: "${userInput}".
-
-Principios del tutor Socrático:
-1. NUNCA des respuestas directas. Siempre formulá preguntas guiadas que ayuden al estudiante a descubrir el concepto por sí mismo.
-2. Ayudá al estudiante a identificar el concepto clave primero.
-3. Construí el razonamiento paso a paso.
-4. Si el estudiante se atascá, ofrecé una pista socrática, no la solución.
-5. Conectá el concepto con ejemplos de la vida real cuando sea posible.
-6. Motivá al estudiante a seguir intentándolo.
-
-Soy el tutor de Cognita Study. Ayudá al estudiante a aprender programación mediante preguntas guiadas, no respuestas directas.`;
-
-    } else {
-      return `Soy un tutor Socrático para la carrera de Ingeniería en Sistemas de Información en la UTN Facultad Regional Tucumán. El estudiante está preguntando sobre: "${userInput}".
-
-Principios del tutor Socrático:
-1. NUNCA des respuestas directas. Siempre formulá preguntas guiadas que ayuden al estudiante a descubrir el concepto por sí mismo.
-2. Ayudá al estudiante a identificar el concepto clave primero.
-3. Construí el razonamiento paso a paso.
-4. Si el estudiante se atascá, ofrecé una pista socrática, no la solución.
-5. Conectá el concepto con ejemplos de la vida real cuando sea posible.
-6. Motivá al estudiante a seguir intentándolo.
-
-Soy el tutor de Cognita Study. Ayudá al estudiante a aprender mediante preguntas guiadas, no respuestas directas.`;
-    }
-  };
-
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
 
@@ -106,33 +49,30 @@ Soy el tutor de Cognita Study. Ayudá al estudiante a aprender mediante pregunta
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
     setInput("");
     setIsTyping(true);
 
     try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      const response = await fetch("/api/tutor", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: getSystemPrompt(input) },
-            { role: "user", content: input },
-          ],
-          temperature: 0.7,
+          messages: nextMessages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Error en la API de OpenAI");
+        throw new Error("Error en la API del Tutor");
       }
 
       const data = await response.json();
-      const assistantContent = data.choices[0]?.message?.content || "No se pudo obtener la respuesta";
+      const assistantContent =
+        data.content || "No se pudo obtener la respuesta del tutor.";
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),

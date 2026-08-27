@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cognita Study 🧠
 
-## Getting Started
+Plataforma de estudio universitario con IA para la **Licenciatura en Sistemas de Información** (UTN Facultad Regional Tucumán, Plan 2023 — Ordenanza 1877).
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router) + **React 19** + **TypeScript** (strict)
+- **Tailwind CSS 4** (+ `@tailwindcss/typography`)
+- **Zustand** para estado, con persistencia en `localStorage`
+- **Vercel AI SDK** + **OpenAI GPT-4o-mini** para el Tutor Socrático
+- **NextAuth v5** (β) para autenticación
+- PWA: Service Worker + Web App Manifest (instalable, offline-first)
+
+## Funcionalidades
+
+- **Tutor IA Socrático** (`/tutor`): chat que guía con preguntas en vez de dar respuestas directas. La clave de OpenAI se usa solo en `/api/tutor` (server-side); sin `OPENAI_API_KEY` responde con un fallback mock.
+- **Flashcards con SM-2** (`/flashcards`): repetición espaciada real.
+- **Plan de estudio**, **práctica adaptativa**, **apuntes** y **detalle de materia** con el plan de estudios completo (36 materias) en `src/data/curriculum.ts`.
+- **Dark/Light mode** y **PWA instalable**.
+
+## Puesta en marcha
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # edita con tus claves (la IA es opcional)
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Variables de entorno (`.env.local`):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+OPENAI_API_KEY=sk-...        # opcional — sin esto el tutor usa respuestas mock
+NEXTAUTH_SECRET=...          # requerido para login real
+GITHUB_ID= / GITHUB_SECRET=  # OAuth opcional
+GOOGLE_CLIENT_ID= / GOOGLE_CLIENT_SECRET=
+DATABASE_URL=postgresql://  # opcional — hoy la app usa localStorage
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Estado de la capa de datos
 
-## Learn More
+La app funciona 100% en el cliente con `localStorage`. Existe `prisma/schema.prisma` (13 modelos) como diseño de un backend futuro, pero **aún no está cableado** (no hay migraciones ni cliente generado). Para activarlo: instalar `@prisma/client` + `prisma`, `prisma db push` y mover la persistencia de los stores Zustand a Server Actions / rutas API.
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev      # desarrollo
+npm run build    # build de producción
+npm run start    # servir build
+npm run lint     # ESLint
+```
