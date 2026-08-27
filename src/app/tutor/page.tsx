@@ -175,12 +175,9 @@ Soy el tutor de Cognita Study. Ayudá al estudiante a aprender mediante pregunta
     <div className="flex h-screen flex-col bg-[var(--background)]">
       {/* Header */}
       <header className="flex items-center gap-4 border-b border-[var(--border)] bg-[var(--background)]/80 px-4 py-3 backdrop-blur-xl">
-        <Link href="/">
-          <Button variant="ghost" size="icon">
-            <button aria-label="Volver al inicio">
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-          </Button>
+        <Link href="/" className="flex items-center gap-2">
+          <ArrowLeft className="h-5 w-5" />
+          <span>Volver al inicio</span>
         </Link>
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)]/10">
@@ -191,10 +188,11 @@ Soy el tutor de Cognita Study. Ayudá al estudiante a aprender mediante pregunta
             <p className="text-xs text-[var(--muted-foreground)]">
               Modo guía — te ayudo a llegar a la respuesta
             </p>
+            <span className="text-xs text-[var(--warning)] fw-medium ml-2">Modo Demo</span>
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" size="sm">
+          <Button variant="ghost" size="sm" onClick={() => alert('Función de historial próximamente')}>
             <BookOpen className="h-4 w-4 mr-2" />
             Historial
           </Button>
@@ -294,9 +292,9 @@ Soy el tutor de Cognita Study. Ayudá al estudiante a aprender mediante pregunta
               <Send className="h-4 w-4" />
             </Button>
           </div>
-          <p className="mt-2 text-center text-xs text-[var(--muted-foreground)]">
-            Tutor Socrático — guía el aprendizaje con preguntas, no da respuestas directas
-          </p>
+<p className="mt-2 text-center text-xs text-[var(--muted-foreground)]">
+      Tutor Socrático — guía el aprendizaje con preguntas, no da respuestas directas. <span className="font-medium">Escribí tu pregunta arriba y presioná Enter o clickeá el botón de envío.</span>
+</p>
         </div>
       </div>
     </div>

@@ -83,13 +83,17 @@ export default function HomePage() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm">
-              Iniciar Sesión
-            </Button>
-            <Button size="sm">
-              Comenzar
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+            <Link href="/login">
+              <Button variant="ghost" size="sm">
+                Iniciar Sesión
+              </Button>
+            </Link>
+            <Link href="/tutor">
+              <Button size="sm">
+                Comenzar
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
@@ -113,14 +117,18 @@ export default function HomePage() {
             {CURRICULUM.university}
           </p>
           <div className="flex items-center justify-center gap-3">
-            <Button size="lg" className="gap-2">
-              <Zap className="h-5 w-5" />
-              Empezar a Estudiar
-            </Button>
-            <Button size="lg" variant="outline">
-              Ver Plan de Estudios
-            </Button>
-          </div>
+              <Link href="/tutor">
+                <Button size="lg" className="gap-2">
+                  <Zap className="h-5 w-5" />
+                  Empezar a Estudiar
+                </Button>
+              </Link>
+              <Link href="/plan">
+                <Button size="lg" variant="outline">
+                  Ver Plan de Estudios
+                </Button>
+              </Link>
+            </div>
         </motion.section>
 
         {/* Stats Grid */}
@@ -223,10 +231,12 @@ export default function HomePage() {
                 {totalTopics} temas
               </p>
             </div>
-            <Button variant="outline" size="sm">
-              Ver todo
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+            <Link href="/plan">
+              <Button variant="outline" size="sm">
+                Ver todo
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">

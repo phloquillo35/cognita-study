@@ -379,7 +379,7 @@ export default function SubjectPage() {
                 <Brain className="h-6 w-6 text-[var(--primary)]" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold">Preguntar al Tutor</h3>
+                <Link href="/tutor"><h3 className="font-semibold">Preguntar al Tutor</h3></Link>
                 <p className="text-sm text-[var(--muted-foreground)]">
                   Resolvé dudas sobre esta materia
                 </p>
@@ -394,7 +394,7 @@ export default function SubjectPage() {
                 <Target className="h-6 w-6 text-[var(--success)]" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold">Practicar</h3>
+                <Link href="/practice"><h3 className="font-semibold">Practicar</h3></Link>
                 <p className="text-sm text-[var(--muted-foreground)]">
                   Ejercicios adaptativos por tema
                 </p>
@@ -409,7 +409,7 @@ export default function SubjectPage() {
                 <CheckCircle2 className="h-6 w-6 text-[var(--warning)]" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold">Crear Flashcards</h3>
+                <Link href="/flashcards"><h3 className="font-semibold">Crear Flashcards</h3></Link>
                 <p className="text-sm text-[var(--muted-foreground)]">
                   Repetición espaciada para memorizar
                 </p>

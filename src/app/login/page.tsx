@@ -114,6 +114,21 @@ function LoginForm() {
               Al continuar, aceptas nuestros Terminos de Servicio y Politica de
               Privacidad.
             </p>
+            <div className="mt-4 text-center">
+              <p className="text-xs text-[var(--warning)] fw-medium">
+                OAuth no configurado — usando modo demo
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  localStorage.setItem("cognita_demo", "1");
+                  window.location.href = "/dashboard";
+                }}
+              >
+                Continuar en modo demo
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
