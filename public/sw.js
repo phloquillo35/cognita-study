@@ -5,15 +5,9 @@ const OFFLINE_PAGE = "/offline";
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) =>
-      cache.addAll([
-        OFFLINE_PAGE,
-        "/",
-        "/_next/static/css/",
-        "/file.svg",
-        "/globe.svg",
-        "/next.svg",
-        "/window.svg",
-      ]).catch(() => {})
+      // cache.addAll es "todo o nada": si alguna entrada falla, no se cachea
+      // nada. Por eso solo listamos rutas que SÍ existen (sin directorios).
+      cache.addAll([OFFLINE_PAGE, "/", "/manifest.json"]).catch(() => {})
     )
   );
   self.skipWaiting();

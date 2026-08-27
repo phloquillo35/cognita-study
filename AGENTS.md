@@ -313,7 +313,7 @@ Cada una de las 36 materias incluye:
 
 ### Prioridad Baja
 - [x] **PWA icons**: Iconos SVG en `/public/icons` referenciados desde el manifest
-- [ ] **Tests unitarios**: Agregar test suite con Vitest/Jest
+- [x] **Tests unitarios**: Vitest en `src/lib` (spaced-repetition SM-2, utils) — `npm run test`
 - [ ] **Deploy en Vercel**: Configurar CI/CD
 - [ ] **Notificaciones push**: Alertas de estudio y recordatorios
 - [ ] **Modo oscuro/claro automático**: Seguir preferencias del sistema
