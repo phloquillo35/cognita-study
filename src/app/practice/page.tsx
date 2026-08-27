@@ -10,13 +10,12 @@ import {
   RotateCcw,
   ChevronRight,
   Sparkles,
-  Clock,
   Target,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
-import { CURRICULUM, getSubjectsByLevel } from "@/data/curriculum";
+import { CURRICULUM } from "@/data/curriculum";
 import Link from "next/link";
 
 interface Exercise {
