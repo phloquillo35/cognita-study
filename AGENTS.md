@@ -418,7 +418,10 @@ localStorage (sin backend). Para IA real, definir `OPENAI_API_KEY`.
 - `npm run lint` — ESLint
 
 ### Pendiente (Fase B, requiere backend)
-- Sincronización multi-dispositivo real con Prisma (`prisma/schema.prisma` ya definido, no cableado).
+- Sincronización multi-dispositivo real con Prisma. Scaffold agregado: `src/lib/db.ts` (cliente con carga
+  dinámica) y `src/app/api/sync/route.ts` (health check). Para activarlo: definir `DATABASE_URL`,
+  instalar/generar `@prisma/client` (`npx prisma generate`) y reemplazar los stores de Zustand por
+  llamadas a la API.
 - Autenticación con Google y almacenamiento en DB en vez de localStorage.
 
 ---
