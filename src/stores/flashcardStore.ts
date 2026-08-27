@@ -11,6 +11,7 @@ interface FlashcardState {
   updateCard: (id: string, updates: Partial<Flashcard>) => void;
   getDueCards: () => Flashcard[];
   getCardsBySubject: (subjectId: string) => Flashcard[];
+  importCards: (cards: Flashcard[]) => void;
 }
 
 export const useFlashcardStore = create<FlashcardState>()(
@@ -46,6 +47,16 @@ export const useFlashcardStore = create<FlashcardState>()(
 
       getCardsBySubject: (subjectId) =>
         get().cards.filter((c) => c.subjectId === subjectId),
+
+      importCards: (cards) =>
+        set((state) => {
+          const existing = new Set(state.cards.map((c) => c.id));
+          const merged = [...state.cards];
+          for (const c of cards) {
+            if (!existing.has(c.id)) merged.push(c);
+          }
+          return { cards: merged };
+        }),
     }),
     {
       name: "cognita-flashcards",

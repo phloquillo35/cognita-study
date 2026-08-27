@@ -391,6 +391,38 @@ DATABASE_URL=postgresql://...
 
 ---
 
+## Features implementadas en `audit/improvements`
+
+Trabajo de auditoría + mejoras (commits `audit/loop1..3` y feat batch). Todo persiste en
+localStorage (sin backend). Para IA real, definir `OPENAI_API_KEY`.
+
+- **FSRS-6 (spaced repetition)**: `src/lib/fsrs.ts` + `spaced-repetition.ts` usa FSRS en vez de SM-2
+  puro. Las tarjetas ahora guardan `stability`/`difficulty`. Tests en `spaced-repetition.test.ts`.
+- **Generador IA (flashcards/quizzes)**: `src/lib/generate.ts` (prompt + parser + fallback mock),
+  `src/app/api/generate/route.ts` (rate-limit 10/min, validación 20k chars, `OPENAI_API_KEY` o demo),
+  `src/stores/generatorStore.ts`, UI `src/components/study/AIGenerator.tsx`.
+- **Modo Examen**: `src/app/exam/page.tsx` — simulacro con flashcards pendientes + quizzes generados,
+  repaso automático de puntos débiles al finalizar.
+- **Tutor estilo Feynman**: `SOCRATIC_SYSTEM_PROMPT` en `src/app/api/tutor/route.ts` ahora pide
+  explicar con palabras propias y detecta lagunas (Técnica de Feynman).
+- **Sesión de Enfoque**: `src/app/focus/page.tsx` con `PomodoroTimer` (`src/components/study/PomodoroTimer.tsx`)
+  y racha diaria (`src/stores/streakStore.ts`), más countdown a parcial.
+- **Dashboard real**: `src/app/dashboard/page.tsx` muestra stats reales (repasos, materias activas,
+  racha, tiempo de enfoque) y enlaces a Examen/Enfoque.
+- **Export/Import decks**: `flashcardStore.importCards` + botones en `src/app/flashcards/page.tsx`.
+
+### Comandos
+- `npm run dev` — desarrollo
+- `npm run test` — Vitest (spaced-repetition, utils)
+- `npm run build` — build de producción
+- `npm run lint` — ESLint
+
+### Pendiente (Fase B, requiere backend)
+- Sincronización multi-dispositivo real con Prisma (`prisma/schema.prisma` ya definido, no cableado).
+- Autenticación con Google y almacenamiento en DB en vez de localStorage.
+
+---
+
 *Última actualización: 26 de agosto de 2026*
 *Desarrollado por: opencode (big-pickle model)*
 *Repositorio: https://github.com/phloquillo35/cognita-study*

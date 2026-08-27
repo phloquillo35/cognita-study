@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Brain } from "lucide-react";
+import { Brain, Target, Trophy, Flame, Clock, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useFlashcardStore } from "@/stores/flashcardStore";
+import { useGeneratorStore } from "@/stores/generatorStore";
+import { useStreakStore } from "@/stores/streakStore";
 
 export default function DashboardPage() {
   const [demoMode, setDemoMode] = useState(false);
@@ -25,6 +28,16 @@ export default function DashboardPage() {
 
   // Determinar si estamos en modo demo (tanto state como localStorage)
   const isDemo = demoMode || typeof window !== "undefined" && localStorage.getItem("cognita_demo") === "1";
+
+  const cards = useFlashcardStore((s) => s.cards);
+  const decks = useGeneratorStore((s) => s.decks);
+  const { currentStreak, totalFocusMinutes } = useStreakStore();
+
+  const totalReviews = cards.reduce((a, c) => a + (c.reviewCount ?? 0), 0);
+  const activeSubjects = new Set(cards.map((c) => c.subjectId)).size;
+  const quizzesCount = decks.reduce((a, d) => a + d.quizzes.length, 0);
+  const focusHours = Math.floor(totalFocusMinutes / 60);
+  const focusMins = totalFocusMinutes % 60;
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
@@ -94,136 +107,87 @@ export default function DashboardPage() {
 
         {/* Quick Links */}
         <section className="mb-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {isDemo ? (
-            <div>
-              <Link
-                href="/tutor"
-                className="group cursor-pointer transition-all hover:border-[var(--primary)]/30 hover:shadow-lg hover:shadow-[var(--primary)]/5 rounded-xl p-6 border"
-              >
-                <div className="rounded-2xl bg-[var(--primary)]/10 p-4 transition-colors group-hover:bg-[var(--primary)]/20">
-                  <div className="h-6 w-6 rounded-full bg-[var(--primary)]/10 flex items-center justify-center mx-auto">
-                    <Brain className="h-4 w-4 text-[var(--primary)]" />
-                  </div>
+          {[
+            {
+              href: "/tutor",
+              title: "Tutor IA Socrático",
+              desc: "Guía con preguntas (modo mock sin API key)",
+              color: "primary",
+              Icon: Brain,
+            },
+            {
+              href: "/flashcards",
+              title: "Flashcards & Repaso",
+              desc: "Spaced repetition con FSRS + generador IA",
+              color: "primary",
+              Icon: BookOpen,
+            },
+            {
+              href: "/exam",
+              title: "Modo Examen",
+              desc: "Simulacro y repaso de puntos débiles",
+              color: "success",
+              Icon: Target,
+            },
+            {
+              href: "/focus",
+              title: "Sesión de Enfoque",
+              desc: "Pomodoro, racha diaria y countdown",
+              color: "warning",
+              Icon: Clock,
+            },
+            {
+              href: "/practice",
+              title: "Práctica Adaptativa",
+              desc: "Ejercicios por tema con retroalimentación",
+              color: "success",
+              Icon: Trophy,
+            },
+            {
+              href: "/plan",
+              title: "Plan de Estudio",
+              desc: "Cronograma personalizado para parciales",
+              color: "warning",
+              Icon: Flame,
+            },
+          ].map(({ href, title, desc, color, Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`group cursor-pointer transition-all hover:border-[var(--${color})]/30 hover:shadow-lg hover:shadow-[var(--${color})]/5 rounded-xl p-6 border`}
+            >
+              <div className={`rounded-2xl bg-[var(--${color})]/10 p-4 transition-colors group-hover:bg-[var(--${color})]/20`}>
+                <div className={`h-6 w-6 rounded-full bg-[var(--${color})]/10 flex items-center justify-center mx-auto`}>
+                  <Icon className={`h-4 w-4 text-[var(--${color})]`} />
                 </div>
-                <div className="mt-3">
-                  <h3 className="font-medium group-hover:text-[var(--primary)]">
-                    Tutor IA Socrático
-                  </h3>
-                  <p className="text-sm text-[var(--muted-foreground)]">
-                    Guía con preguntas (modo mock sin API key)
-                  </p>
-                </div>
-              </Link>
-              <Link
-                href="/practice"
-                className="group cursor-pointer transition-all hover:border-[var(--success)]/30 hover:shadow-lg hover:shadow-[var(--success)]/5 rounded-xl p-6 border"
-              >
-                <div className="rounded-2xl bg-[var(--success)]/10 p-4 transition-colors group-hover:bg-[var(--success)]/20">
-                  <div className="h-6 w-6 rounded-full bg-[var(--success)]/10 flex items-center justify-center mx-auto">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <rect x="2" y="6" width="20" height="12" rx="2" ry="2" />
-                      <line x1="6" y1="6" x2="18" y2="6" />
-                      <line x1="6" y1="18" x2="18" y2="18" />
-                    </svg>
-                  </div>
-                  <div className="mt-3">
-                    <h3 className="font-medium group-hover:text-[var(--success)]">
-                      Práctica Adaptativa
-                    </h3>
-                    <p className="text-sm text-[var(--muted-foreground)]">
-                      Ejercicios por tema con retroalimentación
-                    </p>
-                  </div>
-                </div>
-              </Link>
-              <Link
-                href="/plan"
-                className="group cursor-pointer transition-all hover:border-[var(--warning)]/30 hover:shadow-lg hover:shadow-[var(--warning)]/5 rounded-xl p-6 border"
-              >
-                <div className="rounded-2xl bg-[var(--warning)]/10 p-4 transition-colors group-hover:bg-[var(--warning)]/20">
-                  <div className="h-6 w-6 rounded-full bg-[var(--warning)]/10 flex items-center justify-center mx-auto">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <line x1="3" y1="11" x2="21" y2="11" />
-                      <line x1="7" y1="7" x2="19" y2="7" />
-                      <line x1="11" y1="7" x2="19" y2="11" />
-                    </svg>
-                  </div>
-                  <div className="mt-3">
-                    <h3 className="font-medium group-hover:text-[var(--warning)]">
-                      Plan de Estudio
-                    </h3>
-                    <p className="text-sm text-[var(--muted-foreground)]">
-                      Cronograma personalizado para parciales
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            </div>
-          ) : (
-            <div>
-              <Link href="/tutor" className="group cursor-pointer">
-                <div className="group-hover:text-[var(--primary)] transition-colors">
-                  <h3 className="font-semibold">Tutor IA Socrático</h3>
-                  <p className="text-sm text-[var(--muted-foreground)]">
-                    Resolvé dudas con guía paso a paso
-                  </p>
-                </div>
-              </Link>
-              <Link href="/practice" className="group cursor-pointer">
-                <div className="group-hover:text-[var(--success)] transition-colors">
-                  <h3 className="font-semibold">Práctica Adaptativa</h3>
-                  <p className="text-sm text-[var(--muted-foreground)]">
-                    Ejercicios a tu nivel, progresión inteligente
-                  </p>
-                </div>
-              </Link>
-              <Link href="/plan" className="group cursor-pointer">
-                <div className="group-hover:text-[var(--warning)] transition-colors">
-                  <h3 className="font-semibold">Plan de Estudio</h3>
-                  <p className="text-sm text-[var(--muted-foreground)]">
-                    Cronograma personalizado para parciales
-                  </p>
-                </div>
-              </Link>
-            </div>
-          )}
+              </div>
+              <div className="mt-3">
+                <h3 className={`font-medium group-hover:text-[var(--${color})]`}>{title}</h3>
+                <p className="text-sm text-[var(--muted-foreground)]">{desc}</p>
+              </div>
+            </Link>
+          ))}
         </section>
 
         {/* Study Stats */}
         <section className="mb-12 grid grid-cols-2 gap-4 lg:grid-cols-4">
           <div className="p-4 rounded-xl bg-[var(--primary)]/10">
-            <p className="text-3xl font-bold text-[var(--primary)]">0</p>
-            <p className="text-xs text-[var(--muted-foreground)]">Ejercicios resueltos</p>
+            <p className="text-3xl font-bold text-[var(--primary)]">{totalReviews}</p>
+            <p className="text-xs text-[var(--muted-foreground)]">Repasos realizados</p>
           </div>
           <div className="p-4 rounded-xl bg-[var(--success)]/10">
-            <p className="text-3xl font-bold text-[var(--success)]">0</p>
-            <p className="text-xs text-[var(--muted-foreground)]">Materias completadas</p>
+            <p className="text-3xl font-bold text-[var(--success)]">{activeSubjects}</p>
+            <p className="text-xs text-[var(--muted-foreground)]">Materias activas</p>
           </div>
           <div className="p-4 rounded-xl bg-[var(--warning)]/10">
-            <p className="text-3xl font-bold text-[var(--warning)]">0</p>
-            <p className="text-xs text-[var(--muted-foreground)]">Racha actual</p>
+            <p className="text-3xl font-bold text-[var(--warning)]">{currentStreak}</p>
+            <p className="text-xs text-[var(--muted-foreground)]">Racha actual (días)</p>
           </div>
           <div className="p-4 rounded-xl bg-[var(--cs)]/10">
-            <p className="text-3xl font-bold text-[var(--cs)]">0h</p>
-            <p className="text-xs text-[var(--muted-foreground)]">Horas de estudio</p>
+            <p className="text-3xl font-bold text-[var(--cs)]">
+              {focusHours}h{focusMins}m
+            </p>
+            <p className="text-xs text-[var(--muted-foreground)]">Tiempo de enfoque</p>
           </div>
         </section>
       </main>

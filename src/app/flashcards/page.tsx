@@ -21,10 +21,12 @@ import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
 import { getAllSubjects } from "@/data/curriculum";
 import { useFlashcardStore } from "@/stores/flashcardStore";
+import { useStreakStore } from "@/stores/streakStore";
 import {
   calculateNextReview,
   type ReviewQuality,
 } from "@/lib/spaced-repetition";
+import AIGenerator from "@/components/study/AIGenerator";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
@@ -199,6 +201,42 @@ export default function FlashcardsPage() {
   const [newBack, setNewBack] = useState("");
   const [newSubject, setNewSubject] = useState(ALL_SUBJECTS[0]?.id ?? "am1");
 
+  const handleExport = () => {
+    const blob = new Blob([JSON.stringify(cards, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "cognita-flashcards.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result));
+        const arr = Array.isArray(parsed) ? parsed : parsed.cards;
+        if (Array.isArray(arr)) {
+          const imported = arr.map((c: Record<string, unknown>) => ({
+            ...c,
+            id: typeof c.id === "string" ? c.id : crypto.randomUUID(),
+            createdAt:
+              c.createdAt instanceof Date
+                ? c.createdAt
+                : new Date(c.createdAt as string),
+          }));
+          useFlashcardStore.getState().importCards(imported);
+        }
+      } catch {
+        // ignorar archivo inválido
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const filteredDueCards = useMemo(() => {
     const now = new Date();
     const due = cards.filter((c) => new Date(c.nextReview) <= now);
@@ -221,11 +259,14 @@ export default function FlashcardsPage() {
       interval: result.interval,
       easeFactor: result.easeFactor,
       repetitions: result.repetitions,
+      stability: result.stability,
+      difficulty: result.difficulty,
       nextReview: result.nextReview,
       lastReviewed: new Date(),
       reviewCount: currentCard.reviewCount + 1,
       correctCount: currentCard.correctCount + (quality >= 3 ? 1 : 0),
     });
+    useStreakStore.getState().addReviews(1);
     setIsFlipped(false);
     setReviewedCount((prev) => prev + 1);
     setCurrentIndex((prev) =>
@@ -345,10 +386,32 @@ export default function FlashcardsPage() {
             Cargar ejemplos
           </Button>
 
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              Exportar
+            </Button>
+            <label className="inline-flex cursor-pointer items-center rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm transition-colors hover:border-[var(--primary)]/50">
+              Importar
+              <input
+                type="file"
+                accept="application/json"
+                className="hidden"
+                onChange={(e) =>
+                  e.target.files && handleImport(e.target.files[0])
+                }
+              />
+            </label>
+          </div>
+
           <div className="ml-auto flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
             <Clock className="h-4 w-4" />
             {filteredDueCards.length} para revisar
           </div>
+        </div>
+
+        {/* AI Generator */}
+        <div className="mb-8">
+          <AIGenerator mode="flashcards" />
         </div>
 
         {/* Add card form */}

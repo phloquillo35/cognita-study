@@ -178,6 +178,8 @@ export interface Flashcard {
   interval: number;
   easeFactor: number;
   repetitions: number;
+  stability?: number;
+  difficulty?: number;
   lastReviewed?: Date;
   createdAt: Date;
 }
