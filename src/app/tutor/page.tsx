@@ -5,7 +5,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import Link from "next/link";
-import { Send, Brain, User, Sparkles, ArrowLeft, BookOpen } from "lucide-react";
+import { getAllSubjects } from "@/data/curriculum";
+import {
+  Send,
+  Brain,
+  User,
+  Sparkles,
+  ArrowLeft,
+  RotateCcw,
+} from "lucide-react";
 
 interface Message {
   id: string;
@@ -29,15 +37,47 @@ Puedo ayudarte con:
   timestamp: new Date(),
 };
 
+const ALL_SUBJECTS = getAllSubjects();
+
 export default function TutorPage() {
   const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [subjectId, setSubjectId] = useState<string>(ALL_SUBJECTS[0]?.id ?? "am1");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("cognita_tutor_messages");
+      if (saved) {
+        const parsed = JSON.parse(saved) as Message[];
+        if (Array.isArray(parsed) && parsed.length > 0) setMessages(parsed);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("cognita_tutor_messages", JSON.stringify(messages));
+    } catch {
+      // ignore
+    }
+  }, [messages]);
+
+  const handleClear = () => {
+    setMessages([WELCOME_MESSAGE]);
+    try {
+      localStorage.removeItem("cognita_tutor_messages");
+    } catch {
+      // ignore
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
@@ -63,6 +103,7 @@ export default function TutorPage() {
             role: m.role,
             content: m.content,
           })),
+          subjectId,
         }),
       });
 
@@ -128,13 +169,27 @@ export default function TutorPage() {
             <p className="text-xs text-[var(--muted-foreground)]">
               Modo guía — te ayudo a llegar a la respuesta
             </p>
-            <span className="text-xs text-[var(--warning)] fw-medium ml-2">Modo Demo</span>
+            <span className="text-xs text-[var(--warning)] font-medium ml-2">Modo Demo</span>
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => alert('Función de historial próximamente')}>
-            <BookOpen className="h-4 w-4 mr-2" />
-            Historial
+          <div className="relative">
+            <select
+              value={subjectId}
+              onChange={(e) => setSubjectId(e.target.value)}
+              aria-label="Materia del tutor"
+              className="appearance-none rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 pr-8 text-sm text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none"
+            >
+              {ALL_SUBJECTS.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <Button variant="ghost" size="sm" onClick={handleClear}>
+            <RotateCcw className="h-4 w-4 mr-1" />
+            Nueva conversación
           </Button>
         </div>
       </header>

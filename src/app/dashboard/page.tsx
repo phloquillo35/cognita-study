@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Brain, Target, Trophy, Flame, Clock, BookOpen } from "lucide-react";
+import { Brain, Target, Trophy, Flame, Clock, BookOpen, Layers } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Link from "next/link";
@@ -176,6 +176,13 @@ export default function DashboardPage() {
               desc: "Cronograma personalizado para parciales",
               color: "warning",
               Icon: Flame,
+            },
+            {
+              href: "/materias",
+              title: "Panorama por Materia",
+              desc: "Retención y progreso por asignatura",
+              color: "cs",
+              Icon: Layers,
             },
           ].map(({ href, title, desc, color, Icon }) => (
             <Link

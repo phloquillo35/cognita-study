@@ -6,6 +6,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
 import { Onboarding } from "@/components/layout/Onboarding";
+import { AppShell } from "@/components/layout/AppShell";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -55,7 +56,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <ErrorBoundary>{children}</ErrorBoundary>
+            <ErrorBoundary>
+              <AppShell>{children}</AppShell>
+            </ErrorBoundary>
             <Onboarding />
           </ThemeProvider>
         </SessionProvider>
