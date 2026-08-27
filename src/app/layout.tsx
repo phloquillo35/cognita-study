@@ -4,6 +4,8 @@ import Script from "next/script";
 import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
+import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
+import { Onboarding } from "@/components/layout/Onboarding";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -53,7 +55,8 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <ErrorBoundary>{children}</ErrorBoundary>
+            <Onboarding />
           </ThemeProvider>
         </SessionProvider>
         <Script

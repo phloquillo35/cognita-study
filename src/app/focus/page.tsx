@@ -38,7 +38,7 @@ export default function FocusPage() {
       <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-5xl items-center gap-4 px-4">
           <Link href="/">
-            <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" aria-label="Volver al inicio">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
@@ -146,3 +146,4 @@ export default function FocusPage() {
     </div>
   );
 }
+
