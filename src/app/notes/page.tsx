@@ -14,11 +14,14 @@ import {
   Calendar,
   BookOpen,
   Edit3,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { getAllSubjects } from "@/data/curriculum";
 import { useNoteStore } from "@/stores/noteStore";
+import { useGeneratorStore } from "@/stores/generatorStore";
 import LatexRenderer from "@/components/study/LatexRenderer";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -28,6 +31,46 @@ const ALL_SUBJECTS = getAllSubjects();
 
 export default function NotesPage() {
   const { notes, addNote, removeNote, updateNote } = useNoteStore();
+  const addDeck = useGeneratorStore((s) => s.addDeck);
+  const [genNote, setGenNote] = useState<{ noteId: string; count: number } | null>(
+    null
+  );
+  const [genNoteLoading, setGenNoteLoading] = useState<string | null>(null);
+
+  const handleGenerateQuiz = async (noteId: string) => {
+    const note = notes.find((n) => n.id === noteId);
+    if (!note) return;
+    setGenNoteLoading(noteId);
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: `${note.title}\n\n${note.content}`,
+          subject: subjectMap[note.subjectId]?.name ?? "General",
+          mode: "quiz",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Error");
+      if (data.quizzes?.length) {
+        addDeck({
+          title: `Quiz — ${note.title}`,
+          subjectId: note.subjectId,
+          type: "quiz",
+          flashcards: [],
+          quizzes: data.quizzes,
+        });
+        setGenNote({ noteId, count: data.quizzes.length });
+      } else {
+        setGenNote({ noteId, count: 0 });
+      }
+    } catch {
+      setGenNote({ noteId, count: 0 });
+    } finally {
+      setGenNoteLoading(null);
+    }
+  };
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSubject, setSelectedSubject] = useState<string>("all");
   const [showForm, setShowForm] = useState(false);
@@ -423,11 +466,41 @@ export default function NotesPage() {
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="rounded-xl bg-[var(--muted)]/50 p-6">
-                    <LatexRenderer content={expandedNote.content} className="text-[var(--foreground)]" />
-                  </div>
-                </CardContent>
+                 <CardContent>
+                   <div className="rounded-xl bg-[var(--muted)]/50 p-6">
+                     <LatexRenderer content={expandedNote.content} className="text-[var(--foreground)]" />
+                   </div>
+                   <div className="mt-4 flex flex-wrap items-center gap-3">
+                     <Button
+                       variant="outline"
+                       size="sm"
+                       onClick={() => handleGenerateQuiz(expandedNote.id)}
+                       disabled={genNoteLoading === expandedNote.id}
+                     >
+                       {genNoteLoading === expandedNote.id ? (
+                         <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                       ) : (
+                         <Sparkles className="h-4 w-4 mr-1" />
+                       )}
+                       Generar quiz con IA
+                     </Button>
+                     {genNote?.noteId === expandedNote.id &&
+                       genNote.count > 0 && (
+                         <Link
+                           href="/exam"
+                           className="text-sm font-medium text-[var(--primary)] hover:underline"
+                         >
+                           Ir a practicar ({genNote.count}) →
+                         </Link>
+                       )}
+                     {genNote?.noteId === expandedNote.id &&
+                       genNote.count === 0 && (
+                         <span className="text-sm text-[var(--muted-foreground)]">
+                           No se pudo generar el quiz.
+                         </span>
+                       )}
+                   </div>
+                 </CardContent>
               </Card>
             </motion.div>
           )}
