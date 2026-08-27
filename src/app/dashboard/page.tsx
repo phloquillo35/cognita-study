@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Brain, Target, Trophy, Flame, Clock, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useFlashcardStore } from "@/stores/flashcardStore";
 import { useGeneratorStore } from "@/stores/generatorStore";
-import { useStreakStore } from "@/stores/streakStore";
+import { useStreakStore, lastNDays } from "@/stores/streakStore";
+import { retrievability } from "@/lib/fsrs";
 
 export default function DashboardPage() {
   const [demoMode, setDemoMode] = useState(false);
@@ -38,6 +40,31 @@ export default function DashboardPage() {
   const quizzesCount = decks.reduce((a, d) => a + d.quizzes.length, 0);
   const focusHours = Math.floor(totalFocusMinutes / 60);
   const focusMins = totalFocusMinutes % 60;
+
+  const { daily } = useStreakStore();
+  const days = lastNDays(14);
+  const activity = days.map((d) => ({
+    ...d,
+    reviews: daily[d.key]?.reviews ?? 0,
+    minutes: daily[d.key]?.minutes ?? 0,
+  }));
+  const maxActivity = Math.max(1, ...activity.map((a) => a.reviews));
+
+  const fsrsCards = cards.filter(
+    (c) => c.stability != null && c.lastReviewed
+  );
+  const retention =
+    fsrsCards.length > 0
+      ? Math.round(
+          (fsrsCards.reduce((acc, c) => {
+            const elapsed =
+              (Date.now() - new Date(c.lastReviewed!).getTime()) / 86400000;
+            return acc + retrievability(c.stability!, elapsed);
+          }, 0) /
+            fsrsCards.length) *
+            100
+        )
+      : null;
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
@@ -189,6 +216,66 @@ export default function DashboardPage() {
             </p>
             <p className="text-xs text-[var(--muted-foreground)]">Tiempo de enfoque</p>
           </div>
+        </section>
+
+        {/* Analytics profundo */}
+        <section className="mb-12 grid gap-4 lg:grid-cols-3">
+          <Card className="lg:col-span-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Actividad (últimos 14 días)</CardTitle>
+              <p className="text-xs text-[var(--muted-foreground)]">
+                Repasos registrados por día
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex h-40 items-end gap-1.5">
+                {activity.map((d) => (
+                  <div key={d.key} className="flex flex-1 flex-col items-center gap-1">
+                    <div
+                      className="w-full rounded-t bg-[var(--primary)]/70 transition-all"
+                      style={{ height: `${(d.reviews / maxActivity) * 100}%`, minHeight: d.reviews ? "6px" : "2px" }}
+                      title={`${d.reviews} repasos · ${d.minutes} min`}
+                    />
+                    <span className="text-[9px] text-[var(--muted-foreground)]">{d.label}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Retención estimada</CardTitle>
+              <p className="text-xs text-[var(--muted-foreground)]">
+                Probabilidad media de recordar hoy (FSRS)
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-end gap-2">
+                <span className="text-5xl font-bold text-[var(--success)]">
+                  {retention ?? "—"}
+                </span>
+                {retention != null && <span className="text-xl text-[var(--muted-foreground)]">%</span>}
+              </div>
+              <p className="mt-3 text-xs text-[var(--muted-foreground)]">
+                {retention == null
+                  ? "Repasá algunas tarjetas para calcular tu retención."
+                  : retention >= 80
+                  ? "¡Excelente! Tu memoria está sólida."
+                  : "Repasá las tarjetas pendientes para subirla."}
+              </p>
+              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-xl border border-[var(--border)] p-3">
+                  <p className="text-[var(--muted-foreground)]">Quizzes IA</p>
+                  <p className="text-xl font-bold">{quizzesCount}</p>
+                </div>
+                <div className="rounded-xl border border-[var(--border)] p-3">
+                  <p className="text-[var(--muted-foreground)]">Materias activas</p>
+                  <p className="text-xl font-bold">{activeSubjects}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </section>
       </main>
     </div>

@@ -11,15 +11,40 @@ function diffDays(a: string, b: string): number {
   return Math.round((db - da) / 86400000);
 }
 
+interface DailyActivity {
+  reviews: number;
+  minutes: number;
+}
+
 interface StreakState {
   currentStreak: number;
   longestStreak: number;
   totalFocusMinutes: number;
   totalReviews: number;
   lastActiveDate: string | null;
+  daily: Record<string, DailyActivity>;
   registerActivity: () => void;
   addFocusMinutes: (minutes: number) => void;
   addReviews: (count: number) => void;
+}
+
+function ensureToday(state: {
+  daily: Record<string, DailyActivity>;
+}): Record<string, DailyActivity> {
+  const today = dayKey();
+  if (state.daily[today]) return state.daily;
+  return { ...state.daily, [today]: { reviews: 0, minutes: 0 } };
+}
+
+export function lastNDays(n: number): { key: string; label: string }[] {
+  const out: { key: string; label: string }[] = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    out.push({ key, label: d.toLocaleDateString("es", { weekday: "short" }) });
+  }
+  return out;
 }
 
 export const useStreakStore = create<StreakState>()(
@@ -30,6 +55,7 @@ export const useStreakStore = create<StreakState>()(
       totalFocusMinutes: 0,
       totalReviews: 0,
       lastActiveDate: null,
+      daily: {},
 
       registerActivity: () => {
         const today = dayKey();
@@ -41,6 +67,7 @@ export const useStreakStore = create<StreakState>()(
           streak = gap === 1 ? get().currentStreak + 1 : 1;
         }
         set((s) => ({
+          daily: ensureToday(s),
           currentStreak: streak,
           longestStreak: Math.max(s.longestStreak, streak),
           lastActiveDate: today,
@@ -49,12 +76,38 @@ export const useStreakStore = create<StreakState>()(
 
       addFocusMinutes: (minutes) => {
         get().registerActivity();
-        set((s) => ({ totalFocusMinutes: s.totalFocusMinutes + minutes }));
+        set((s) => {
+          const daily = ensureToday(s);
+          const today = dayKey();
+          return {
+            daily: {
+              ...daily,
+              [today]: {
+                reviews: daily[today].reviews,
+                minutes: daily[today].minutes + minutes,
+              },
+            },
+            totalFocusMinutes: s.totalFocusMinutes + minutes,
+          };
+        });
       },
 
       addReviews: (count) => {
         get().registerActivity();
-        set((s) => ({ totalReviews: s.totalReviews + count }));
+        set((s) => {
+          const daily = ensureToday(s);
+          const today = dayKey();
+          return {
+            daily: {
+              ...daily,
+              [today]: {
+                reviews: daily[today].reviews + count,
+                minutes: daily[today].minutes,
+              },
+            },
+            totalReviews: s.totalReviews + count,
+          };
+        });
       },
     }),
     { name: "cognita-streak" }
