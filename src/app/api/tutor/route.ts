@@ -28,9 +28,31 @@ FORMATO:
 
 const MAX_TOTAL_CHARS = 20000;
 
+// Simple in-memory rate limit (sliding window) keyed by IP.
+const RATE_LIMIT = 12;
+const RATE_WINDOW_MS = 60_000;
+const hits = new Map<string, number[]>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const recent = (hits.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
+  recent.push(now);
+  hits.set(ip, recent);
+  return recent.length > RATE_LIMIT;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { messages, subjectId } = await request.json();
+
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    if (isRateLimited(ip)) {
+      return new Response(
+        JSON.stringify({ error: "Too many requests, try again later" }),
+        { status: 429, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(

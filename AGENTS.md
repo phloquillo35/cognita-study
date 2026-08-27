@@ -152,6 +152,7 @@ cognita-study/
 - Detección de temas (matemática, física, programación)
 - Soporte LaTeX para fórmulas matemáticas
 - API route con OpenAI GPT-4o-mini (`maxTokens: 1200`) + fallback mock cuando no hay `OPENAI_API_KEY`
+- Rate-limit por IP (12 req/min) en `/api/tutor` para controlar costos
 
 ### 3. Práctica Adaptativa (`/practice`)
 - Selector de materia
