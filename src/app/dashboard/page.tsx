@@ -108,14 +108,14 @@ export default function DashboardPage() {
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-xl">
           <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4">
-            <a href="/" className="flex items-center gap-2.5 shrink-0">
+            <Link href="/" className="flex items-center gap-2.5 shrink-0">
               <div className="w-9 h-9 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center">
                 <Brain className="w-5 h-5 text-[var(--primary)]" />
               </div>
               <span className="text-lg font-bold text-[var(--foreground)] hidden sm:block">
                 Cognita Study
               </span>
-            </a>
+            </Link>
           </div>
         </header>
 

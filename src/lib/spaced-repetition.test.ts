@@ -88,6 +88,7 @@ describe("calculateNextReview (SM-2 compat wrapper)", () => {
     interval: 0,
     easeFactor: 2.5,
     repetitions: 0,
+    difficulty: 5,
   };
 
   it("produces a valid first review", () => {

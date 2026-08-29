@@ -227,7 +227,7 @@ export default function FlashcardsPage() {
               c.createdAt instanceof Date
                 ? c.createdAt
                 : new Date(c.createdAt as string),
-          }));
+          })) as unknown as import("@/types").Flashcard[];
           useFlashcardStore.getState().importCards(imported);
         }
       } catch {

@@ -61,14 +61,9 @@ export function parseGenerated(raw: string): {
   const arr = JSON.parse(cleaned.slice(start, end + 1));
   if (!Array.isArray(arr)) throw new Error("Formato inesperado");
 
-  const isFlashcard = arr.length > 0 && typeof arr[0]?.front === "string";
-
-  if (isFlashcard) {
-    const flashcards = arr
-      .filter((x) => x && typeof x.front === "string" && typeof x.back === "string")
-      .map((x) => ({ front: String(x.front), back: String(x.back) }));
-    return { flashcards, quizzes: [] };
-  }
+  const flashcards = arr
+    .filter((x) => x && typeof x.front === "string" && typeof x.back === "string")
+    .map((x) => ({ front: String(x.front), back: String(x.back) }));
 
   const quizzes = arr
     .filter(
@@ -85,7 +80,10 @@ export function parseGenerated(raw: string): {
       correctIndex: Math.min(Math.max(Number(x.correctIndex), 0), x.options.length - 1),
       explanation: typeof x.explanation === "string" ? x.explanation : "",
     }));
-  return { flashcards: [], quizzes };
+
+  if (flashcards.length > 0 && quizzes.length === 0) return { flashcards, quizzes: [] };
+  if (quizzes.length > 0 && flashcards.length === 0) return { flashcards: [], quizzes };
+  return { flashcards, quizzes };
 }
 
 function splitSentences(text: string): string[] {

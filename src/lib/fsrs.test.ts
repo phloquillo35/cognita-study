@@ -47,8 +47,10 @@ describe("FSRS difficulty transition", () => {
 describe("FSRS stability transition", () => {
   it("recall increases stability, forget decreases it", () => {
     const base = 5;
-    const up = nextRecallStability(base, 3, 1);
-    const down = nextForgetStability(base, 3, 1);
+    const difficulty = 5;
+    const r = 0.9;
+    const up = nextRecallStability(difficulty, base, r, 3);
+    const down = nextForgetStability(difficulty, base, r);
     expect(up).toBeGreaterThan(base);
     expect(down).toBeLessThanOrEqual(base);
   });

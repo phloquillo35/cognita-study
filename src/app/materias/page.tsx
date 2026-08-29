@@ -22,12 +22,13 @@ export default function SubjectsPage() {
   const [level, setLevel] = useState<string>("all");
 
   const levels = ["all", ...ALL_SUBJECTS.reduce<string[]>((acc, s) => {
-    if (!acc.includes(s.level)) acc.push(s.level);
+    const lv = String(s.level);
+    if (!acc.includes(lv)) acc.push(lv);
     return acc;
   }, [])];
 
   const rows = useMemo(() => {
-    return ALL_SUBJECTS.filter((s) => level === "all" || s.level === level).map(
+    return ALL_SUBJECTS.filter((s) => level === "all" || String(s.level) === level).map(
       (subject) => {
         const subjectCards = cards.filter((c) => c.subjectId === subject.id);
         const due = subjectCards.filter(

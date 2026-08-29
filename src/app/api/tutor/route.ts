@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       const result = await generateText({
         model: openai("gpt-4o-mini"),
         system: SOCRATIC_SYSTEM_PROMPT,
-        maxTokens: 1200,
+        maxOutputTokens: 1200,
         messages: messages.map((msg: { role: string; content: string }) => ({
           role: msg.role as "user" | "assistant" | "system",
           content: msg.content,

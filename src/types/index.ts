@@ -179,7 +179,6 @@ export interface Flashcard {
   easeFactor: number;
   repetitions: number;
   stability?: number;
-  difficulty?: number;
   lastReviewed?: Date;
   createdAt: Date;
 }

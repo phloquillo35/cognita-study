@@ -61,8 +61,8 @@ export async function POST(request: NextRequest) {
       try {
         const result = await generateText({
           model: openai("gpt-4o-mini"),
-          system: buildGenerationPrompt({ text, subject: subjectName, mode: m }),
-          maxTokens: 2000,
+          prompt: buildGenerationPrompt({ text, subject: subjectName, mode: m }),
+          maxOutputTokens: 2000,
           temperature: 0.7,
         });
         const parsed = parseGenerated(result.text);

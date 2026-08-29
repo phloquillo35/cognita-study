@@ -34,6 +34,14 @@ export default function ExamPage() {
   const cards = useFlashcardStore((s) => s.cards);
   const updateCard = useFlashcardStore((s) => s.updateCard);
   const decks = useGeneratorStore((s) => s.decks);
+  const [reviewIds, setReviewIds] = useState<string[] | null>(null);
+  const [started, setStarted] = useState(false);
+  const [index, setIndex] = useState(0);
+  const [revealed, setRevealed] = useState(false);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [weak, setWeak] = useState<ExamItem[]>([]);
+  const [finished, setFinished] = useState(false);
   const subjectMap = useMemo(
     () => Object.fromEntries(getAllSubjects().map((s) => [s.id, s])),
     []
@@ -63,15 +71,6 @@ export default function ExamPage() {
     const all = [...fcItems, ...quizItems];
     return reviewIds ? all.filter((i) => reviewIds.includes(i.id)) : all;
   }, [cards, decks, reviewIds]);
-
-  const [started, setStarted] = useState(false);
-  const [index, setIndex] = useState(0);
-  const [revealed, setRevealed] = useState(false);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [score, setScore] = useState({ correct: 0, total: 0 });
-  const [weak, setWeak] = useState<ExamItem[]>([]);
-  const [finished, setFinished] = useState(false);
-  const [reviewIds, setReviewIds] = useState<string[] | null>(null);
 
   const current = items[index];
 

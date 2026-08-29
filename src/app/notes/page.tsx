@@ -101,7 +101,7 @@ export default function NotesPage() {
       result = result.filter((n) => n.subjectId === selectedSubject);
     }
 
-    return result.sort(
+    return [...result].sort(
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
   }, [notes, searchQuery, selectedSubject]);
