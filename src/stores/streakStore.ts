@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { isDbAvailable } from "@/lib/sync";
 
 function dayKey(d = new Date()): string {
   return d.toISOString().slice(0, 10);
@@ -23,9 +24,12 @@ interface StreakState {
   totalReviews: number;
   lastActiveDate: string | null;
   daily: Record<string, DailyActivity>;
+  syncStatus: "idle" | "syncing" | "fallback" | "error";
   registerActivity: () => void;
   addFocusMinutes: (minutes: number) => void;
   addReviews: (count: number) => void;
+  fetchAll: () => Promise<void>;
+  syncToDb: () => Promise<void>;
 }
 
 function ensureToday(state: {
@@ -56,6 +60,7 @@ export const useStreakStore = create<StreakState>()(
       totalReviews: 0,
       lastActiveDate: null,
       daily: {},
+      syncStatus: "idle" as const,
 
       registerActivity: () => {
         const today = dayKey();
@@ -72,6 +77,7 @@ export const useStreakStore = create<StreakState>()(
           longestStreak: Math.max(s.longestStreak, streak),
           lastActiveDate: today,
         }));
+        get().syncToDb();
       },
 
       addFocusMinutes: (minutes) => {
@@ -90,6 +96,7 @@ export const useStreakStore = create<StreakState>()(
             totalFocusMinutes: s.totalFocusMinutes + minutes,
           };
         });
+        get().syncToDb();
       },
 
       addReviews: (count) => {
@@ -108,6 +115,37 @@ export const useStreakStore = create<StreakState>()(
             totalReviews: s.totalReviews + count,
           };
         });
+        get().syncToDb();
+      },
+
+      fetchAll: async () => {
+        if (!(await isDbAvailable())) { set({ syncStatus: "fallback" }); return; }
+        set({ syncStatus: "syncing" });
+        try {
+          const res = await fetch("/api/streak", { cache: "no-store" });
+          const json = await res.json();
+          if (json.fallback) { set({ syncStatus: "fallback" }); return; }
+          const remote = json as StreakState;
+          if (remote && typeof remote.currentStreak === "number") {
+            set({
+              currentStreak: remote.currentStreak,
+              longestStreak: remote.longestStreak,
+              totalFocusMinutes: remote.totalFocusMinutes,
+              totalReviews: remote.totalReviews,
+              lastActiveDate: remote.lastActiveDate,
+              daily: (remote.daily as Record<string, DailyActivity>) ?? {},
+              syncStatus: "idle",
+            });
+          } else set({ syncStatus: "idle" });
+        } catch { set({ syncStatus: "error" }); }
+      },
+
+      syncToDb: async () => {
+        if (!(await isDbAvailable())) return;
+        const s = get();
+        try {
+          await fetch("/api/streak", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ currentStreak: s.currentStreak, longestStreak: s.longestStreak, totalFocusMinutes: s.totalFocusMinutes, totalReviews: s.totalReviews, lastActiveDate: s.lastActiveDate, daily: s.daily }) });
+        } catch {}
       },
     }),
     { name: "cognita-streak" }

@@ -20,14 +20,16 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts    Account[]
-  sessions    Session[]
-  progress    UserProgress[]
-  exercises   ExerciseResult[]
-  studyPlans  StudyPlan[]
-  notes       Note[]
-  flashcards  Flashcard[]
-  chatHistory ChatMessage[]
+  accounts       Account[]
+  sessions       Session[]
+  progress       UserProgress[]
+  exercises      ExerciseResult[]
+  studyPlans     StudyPlan[]
+  notes          Note[]
+  flashcards     Flashcard[]
+  chatHistory    ChatMessage[]
+  generatorDecks GeneratorDeck[]
+  streak         Streak?
 
   @@map("users")
 }
@@ -240,4 +242,36 @@ model ChatMessage {
   topic   Topic?   @relation(fields: [topicId], references: [id], onDelete: Cascade)
 
   @@map("chat_messages")
+}
+
+model GeneratorDeck {
+  id          String   @id @default(cuid())
+  userId      String
+  subjectId   String
+  title       String
+  type        String
+  flashcards  Json?
+  quizzes     Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("generator_decks")
+}
+
+model Streak {
+  userId            String   @id
+  currentStreak     Int      @default(0)
+  longestStreak     Int      @default(0)
+  totalFocusMinutes Int      @default(0)
+  totalReviews      Int      @default(0)
+  lastActiveDate    String?
+  daily             Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("streaks")
 }
