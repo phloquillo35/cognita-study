@@ -1,23 +1,23 @@
 # AGENTS.md (Workflow Context) — cognita-study
-> Generado: 2026-08-29 21:32:58 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/cognita-study
+> Generado: 2026-08-29 21:41:26 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/cognita-study
 
 ## 🎯 Objetivo actual
-Loop4 Backend 100% — Generator + Streak + bulk sync, DB 15 modelos, stores híbridos
+Loop5 Calendario FSRS — 27 routes, 50 tests, deploy prod f4slviund
 
 ## 📍 Estado actual
   Branch: main · Working tree: SUCIO (1 archivos)
 
   Cambios sin commit:
-   AGENTS.md | 90 +++------------------------------------------------------------
-   1 file changed, 3 insertions(+), 87 deletions(-)
+   AGENTS.md | 86 ++-------------------------------------------------------------
+   1 file changed, 2 insertions(+), 84 deletions(-)
    M AGENTS.md
 
   Últimos commits:
+  c60224e feat(calendar): Loop5 — Calendario FSRS mensual
+  3877e65 docs: AGENTS.md Loop4 handoff
   80eb740 feat(backend): Loop4 — Backend 100% Generator + Streak + bulk sync
   904a7d8 docs: AGENTS.md Loop3 handoff
   82b5d52 docs(loop3): deploy Vercel prod — 24 routes, env vars, QA smoke ok
-  9a4e75d chore(deploy): add postinstall prisma generate for Vercel build
-  eabf959 feat(backend): Loop2 — Supabase + CRUD APIs + stores híbridos
 
 ## ✅ Tareas activas
   (sin tareas activas)
@@ -89,4 +89,4 @@ vitest.config.ts
     typecheck: npx tsc --noEmit
 
 ## 🧠 Decisiones tomadas
-        _(decisiones de diseño/acuerdo a registrar aquí)_
+          _(decisiones de diseño/acuerdo a registrar aquí)_
