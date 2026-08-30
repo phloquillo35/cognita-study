@@ -1,25 +1,23 @@
 # AGENTS.md (Workflow Context) — cognita-study
-> Generado: 2026-08-29 21:27:56 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/cognita-study
+> Generado: 2026-08-29 21:32:58 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/cognita-study
 
 ## 🎯 Objetivo actual
-Loop3 Deploy Vercel — prod https://cognita-study.vercel.app, 24 routes, env vars, QA smoke ok
+Loop4 Backend 100% — Generator + Streak + bulk sync, DB 15 modelos, stores híbridos
 
 ## 📍 Estado actual
-  Branch: main · Working tree: SUCIO (2 archivos)
+  Branch: main · Working tree: SUCIO (1 archivos)
 
   Cambios sin commit:
-   AGENTS.md | 97 ++-------------------------------------------------------------
-   LOOP.md   | 85 +++++++++++++++++++++++--------------------------------
-   2 files changed, 38 insertions(+), 144 deletions(-)
+   AGENTS.md | 90 +++------------------------------------------------------------
+   1 file changed, 3 insertions(+), 87 deletions(-)
    M AGENTS.md
-   M LOOP.md
 
   Últimos commits:
+  80eb740 feat(backend): Loop4 — Backend 100% Generator + Streak + bulk sync
+  904a7d8 docs: AGENTS.md Loop3 handoff
+  82b5d52 docs(loop3): deploy Vercel prod — 24 routes, env vars, QA smoke ok
   9a4e75d chore(deploy): add postinstall prisma generate for Vercel build
   eabf959 feat(backend): Loop2 — Supabase + CRUD APIs + stores híbridos
-  f4323f6 fix(loop1): desbloqueo build — tsc 0, tests 42/42, lint 0 errors
-  4320ceb docs: update AGENTS.md con estado real y guía de continuidad
-  2a760d1 feat(ux): navegación global inferior, mejoras del tutor (materia/historial) y panorama por materia
 
 ## ✅ Tareas activas
   (sin tareas activas)
@@ -91,4 +89,4 @@ vitest.config.ts
     typecheck: npx tsc --noEmit
 
 ## 🧠 Decisiones tomadas
-      _(decisiones de diseño/acuerdo a registrar aquí)_
+        _(decisiones de diseño/acuerdo a registrar aquí)_
