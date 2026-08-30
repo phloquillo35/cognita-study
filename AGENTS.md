@@ -1,8 +1,8 @@
 # AGENTS.md (Workflow Context) — cognita-study
-> Generado: 2026-08-29 21:41:26 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/cognita-study
+> Generado: 2026-08-29 22:36:20 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/cognita-study
 
 ## 🎯 Objetivo actual
-Loop5 Calendario FSRS — 27 routes, 50 tests, deploy prod f4slviund
+Loop6 DONE 6/6 — lint 0w, RAG 2 routes, calendario filter, PWA v2, rateLimit, E2E 5, prod htcavcq7f 29 routes
 
 ## 📍 Estado actual
   Branch: main · Working tree: SUCIO (1 archivos)
@@ -13,11 +13,11 @@ Loop5 Calendario FSRS — 27 routes, 50 tests, deploy prod f4slviund
    M AGENTS.md
 
   Últimos commits:
+  8f39be3 docs(loop6): F6 GREEN — deploy htcavcq7f prod RAG 200, 29 routes, 60 tests
+  113c3b7 feat(loop6): F1-F5 lint 0w, RAG, calendario filter, PWA v2, rateLimit 4 routes, E2E 5
+  c6e7fe2 docs: AGENTS.md Loop5 handoff — Calendario FSRS prod
   c60224e feat(calendar): Loop5 — Calendario FSRS mensual
   3877e65 docs: AGENTS.md Loop4 handoff
-  80eb740 feat(backend): Loop4 — Backend 100% Generator + Streak + bulk sync
-  904a7d8 docs: AGENTS.md Loop3 handoff
-  82b5d52 docs(loop3): deploy Vercel prod — 24 routes, env vars, QA smoke ok
 
 ## ✅ Tareas activas
   (sin tareas activas)
@@ -34,12 +34,15 @@ _(continuar donde quedó opencode. Si hay tareas in_progress arriba, retomar la 
 .vercel/README.txt
 AGENTS.md
 CLAUDE.md
+e2e
+e2e/smoke.spec.ts
 eslint.config.mjs
 LOOP.md
 next-env.d.ts
 next.config.ts
 package-lock.json
 package.json
+playwright.config.ts
 postcss.config.mjs
 prisma
 prisma/schema.prisma
@@ -63,6 +66,8 @@ src/data
 src/lib
 src/stores
 src/types
+test-results
+test-results/.last-run.json
 tsconfig.json
 tsconfig.tsbuildinfo
 vitest.config.ts
@@ -85,8 +90,9 @@ vitest.config.ts
     start: next start
     lint: eslint
     test: vitest run
+    test:e2e: playwright test
     postinstall: prisma generate
     typecheck: npx tsc --noEmit
 
 ## 🧠 Decisiones tomadas
-          _(decisiones de diseño/acuerdo a registrar aquí)_
+            _(decisiones de diseño/acuerdo a registrar aquí)_
