@@ -1,20 +1,28 @@
-// Cliente Prisma con carga dinámica.
-// Se importa de forma diferida para que el build no falle si "@prisma/client"
-// no está instalado/generado todavía (modo solo-localStorage).
+import type { PrismaClient } from "@prisma/client";
 
-let prisma: unknown = null;
+let prisma: PrismaClient | null = null;
 let tried = false;
 
-export async function getPrisma(): Promise<unknown | null> {
-  if (tried) return prisma as unknown;
+export async function getPrisma(): Promise<PrismaClient | null> {
+  if (tried) return prisma;
   tried = true;
   if (!process.env.DATABASE_URL) return null;
   try {
-    const mod = await import("@prisma/client");
-    const PrismaClient = (mod as { PrismaClient: new () => unknown }).PrismaClient;
-    prisma = new PrismaClient();
+    const { PrismaClient: Client } = await import("@prisma/client");
+    prisma = new Client() as PrismaClient;
     return prisma;
   } catch {
     return null;
+  }
+}
+
+export async function isDbAvailable(): Promise<boolean> {
+  const p = await getPrisma();
+  if (!p) return false;
+  try {
+    await p.$queryRaw`SELECT 1`;
+    return true;
+  } catch {
+    return false;
   }
 }

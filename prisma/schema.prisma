@@ -90,9 +90,6 @@ model Subject {
   topics        Topic[]
   progress      UserProgress[]
   exercises     Exercise[]
-  notes         Note[]
-  flashcards    Flashcard[]
-  studyPlans    StudyPlan[]
   chatMessages  ChatMessage[]
 
   @@map("subjects")
@@ -179,10 +176,11 @@ model StudyPlan {
   targetDate    DateTime
   dailyMinutes  Int
   completed     Boolean  @default(false)
+  topics        Json?
   createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subject Subject @relation(fields: [subjectId], references: [id])
 
   @@map("study_plans")
 }
@@ -199,7 +197,6 @@ model Note {
   updatedAt   DateTime @updatedAt
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subject Subject @relation(fields: [subjectId], references: [id])
 
   @@map("notes")
 }
@@ -216,9 +213,15 @@ model Flashcard {
   nextReview    DateTime @default(now())
   reviewCount   Int      @default(0)
   correctCount  Int      @default(0)
+  interval      Int      @default(0)
+  easeFactor    Float    @default(2.5)
+  repetitions   Int      @default(0)
+  stability     Float?
+  lastReviewed  DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subject Subject @relation(fields: [subjectId], references: [id])
 
   @@map("flashcards")
 }

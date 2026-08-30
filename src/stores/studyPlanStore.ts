@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { startOfDay, addDays, differenceInDays } from "date-fns";
+import { isDbAvailable } from "@/lib/sync";
 
 export interface TopicPlan {
   topicId: string;
@@ -19,6 +20,7 @@ export interface SubjectPlan {
 
 interface StudyPlanState {
   studyPlans: SubjectPlan[];
+  syncStatus: "idle" | "syncing" | "fallback" | "error";
   addPlan: (
     plan: Omit<SubjectPlan, "completed"> & { completed?: boolean }
   ) => void;
@@ -29,6 +31,7 @@ interface StudyPlanState {
   getPlansBySubject: (subjectId: string) => SubjectPlan | undefined;
   getUpcomingTopics: () => TopicPlan[];
   getOverallProgress: () => { total: number; completed: number; percentage: number };
+  fetchAll: () => Promise<void>;
 }
 
 function startOfDayLocal(date: Date): Date {
@@ -90,27 +93,22 @@ export const useStudyPlanStore = create<StudyPlanState>()(
   persist(
     (set, get) => ({
       studyPlans: [],
+      syncStatus: "idle" as const,
 
       addPlan: (plan) => {
         const existing = get().studyPlans.find(
           (p) => p.subjectId === plan.subjectId
         );
         if (existing) return;
-
-        set((state) => ({
-          studyPlans: [
-            ...state.studyPlans,
-            { ...plan, completed: plan.completed ?? false },
-          ],
-        }));
+        const newPlan = { ...plan, completed: plan.completed ?? false };
+        set((state) => ({ studyPlans: [...state.studyPlans, newPlan] }));
+        isDbAvailable().then((ok)=>{ if(ok) fetch("/api/study-plans",{ method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ subjectId: plan.subjectId, targetDate: plan.targetDate, dailyMinutes: plan.dailyMinutes, topics: plan.topics, completed: newPlan.completed }) }).catch(()=>{}); });
       },
 
-      removePlan: (subjectId) =>
-        set((state) => ({
-          studyPlans: state.studyPlans.filter(
-            (p) => p.subjectId !== subjectId
-          ),
-        })),
+      removePlan: (subjectId) => {
+        set((state) => ({ studyPlans: state.studyPlans.filter((p) => p.subjectId !== subjectId) }));
+        isDbAvailable().then(async(ok)=>{ if(!ok) return; try{ const r=await fetch(`/api/study-plans?subjectId=${subjectId}`); const j=await r.json(); const id=j[0]?.id; if(id) fetch(`/api/study-plans/${id}`,{method:"DELETE"}).catch(()=>{});}catch{} });
+      },
 
       updatePlan: (subjectId, updates) =>
         set((state) => ({
@@ -165,17 +163,27 @@ export const useStudyPlanStore = create<StudyPlanState>()(
       getOverallProgress: () => {
         let total = 0;
         let completed = 0;
-
         for (const plan of get().studyPlans) {
           total += plan.topics.length;
           completed += plan.topics.filter((t) => t.completed).length;
         }
+        return { total, completed, percentage: total > 0 ? Math.round((completed / total) * 100) : 0 };
+      },
 
-        return {
-          total,
-          completed,
-          percentage: total > 0 ? Math.round((completed / total) * 100) : 0,
-        };
+      fetchAll: async () => {
+        const { isDbAvailable: check } = await import("@/lib/sync");
+        if (!(await check())) { set({ syncStatus: "fallback" }); return; }
+        set({ syncStatus: "syncing" });
+        try {
+          const res = await fetch("/api/study-plans", { cache: "no-store" });
+          const json = await res.json();
+          if (json.fallback) { set({ syncStatus: "fallback" }); return; }
+          const remote = Array.isArray(json) ? json : json.data ?? [];
+          const parsed: SubjectPlan[] = remote.map((p: Record<string,unknown>)=>({ subjectId: p.subjectId as string, targetDate: new Date(p.targetDate as string), dailyMinutes: p.dailyMinutes as number, completed: p.completed as boolean, topics: ((p.topics as unknown as TopicPlan[]) ?? []).map((t)=>({ ...t, scheduledDate: new Date(t.scheduledDate)})) }));
+          const local = get().studyPlans;
+          const merged=[...parsed]; const ids=new Set(parsed.map(p=>p.subjectId)); for(const lc of local) if(!ids.has(lc.subjectId)) merged.push(lc);
+          set({ studyPlans: merged, syncStatus: "idle" });
+        } catch { set({ syncStatus: "error" }); }
       },
     }),
     {
