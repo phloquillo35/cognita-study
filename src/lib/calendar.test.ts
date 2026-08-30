@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getMonthGrid, groupByDueDate, getDueForDate, getAvgRetention, buildCalendarDays, dayKey } from "./calendar";
+import { getMonthGrid, groupByDueDate, getDueForDate, getAvgRetention, buildCalendarDays, dayKey, filterBySubject, searchBySubject, toIcal } from "./calendar";
 import type { Flashcard } from "@/types";
 
 function makeCard(nextReview: string, overrides: Partial<Flashcard> = {}): Flashcard {
@@ -84,5 +84,50 @@ describe("buildCalendarDays", () => {
     const days = buildCalendarDays([], 2026, 7, new Date("2026-08-30"));
     const cell = days.find((d) => d.key === "2026-08-30")!;
     expect(cell.avgRetention).toBeNull();
+  });
+});
+
+describe("filterBySubject", () => {
+  it("filters cards by subjectId", () => {
+    const c1 = makeCard("2026-08-30T00:00:00.000Z", { subjectId: "am1" });
+    const c2 = makeCard("2026-08-30T00:00:00.000Z", { subjectId: "aga" });
+    const c3 = makeCard("2026-08-30T00:00:00.000Z", { subjectId: "am1" });
+    expect(filterBySubject([c1, c2, c3], "am1")).toHaveLength(2);
+    expect(filterBySubject([c1, c2, c3], "aga")).toHaveLength(1);
+    expect(filterBySubject([c1, c2, c3], "all")).toHaveLength(3);
+    expect(filterBySubject([c1, c2, c3], "")).toHaveLength(3);
+  });
+});
+
+describe("searchBySubject", () => {
+  it("searches case-insensitive substring on subjectId", () => {
+    const c1 = makeCard("2026-08-30T00:00:00.000Z", { subjectId: "am1" });
+    const c2 = makeCard("2026-08-30T00:00:00.000Z", { subjectId: "AM2" });
+    const c3 = makeCard("2026-08-30T00:00:00.000Z", { subjectId: "fis1" });
+    expect(searchBySubject([c1, c2, c3], "am")).toHaveLength(2);
+    expect(searchBySubject([c1, c2, c3], "AM")).toHaveLength(2);
+    expect(searchBySubject([c1, c2, c3], "")).toHaveLength(3);
+    expect(searchBySubject([c1, c2, c3], "xyz")).toHaveLength(0);
+  });
+});
+
+describe("toIcal", () => {
+  it("generates VC calendar with BEGIN:VCALENDAR and DTSTART", () => {
+    const c = makeCard("2026-08-30T00:00:00.000Z", { subjectId: "am1", front: "Derivada", back: "Definición de derivada" });
+    const days = buildCalendarDays([c], 2026, 7, new Date("2026-08-30"));
+    const ics = toIcal(days, "Cognita");
+    expect(ics).toContain("BEGIN:VCALENDAR");
+    expect(ics).toContain("END:VCALENDAR");
+    expect(ics).toContain("DTSTART;VALUE=DATE:20260830");
+    expect(ics).toContain("SUMMARY:Derivada");
+    expect(ics).toContain("X-WR-CALNAME:Cognita");
+    expect(ics).toContain("BEGIN:VEVENT");
+    expect(ics).toContain("END:VEVENT");
+  });
+  it("handles empty days without VEVENT", () => {
+    const days = buildCalendarDays([], 2026, 7, new Date("2026-08-30"));
+    const ics = toIcal(days);
+    expect(ics).toContain("BEGIN:VCALENDAR");
+    expect(ics).not.toContain("BEGIN:VEVENT");
   });
 });

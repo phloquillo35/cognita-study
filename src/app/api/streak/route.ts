@@ -3,7 +3,7 @@ import { getPrisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 async function getUserId(): Promise<string>{ try{ const s=await auth(); return (s?.user as {id?:string})?.id ?? "demo-user"; }catch{ return "demo-user"; } }
 async function ensureDemoUser(prisma: NonNullable<Awaited<ReturnType<typeof getPrisma>>>, userId:string){ if(userId==="demo-user") await prisma.user.upsert({ where:{id:"demo-user"}, update:{}, create:{ id:"demo-user", name:"Demo", email:"demo@cognita.local"}}); }
-export async function GET(request: NextRequest){
+export async function GET(){
   const prisma=await getPrisma(); if(!prisma) return new Response(JSON.stringify({fallback:true,data:null}),{status:200, headers:{"Content-Type":"application/json","X-Fallback":"localStorage"}});
   const userId=await getUserId(); await ensureDemoUser(prisma,userId);
   const streak=await prisma.streak.findUnique({ where:{ userId }});

@@ -209,6 +209,7 @@ export default function PracticePage() {
 
   useEffect(() => {
     if (exercises.length > 0 && score.total >= exercises.length && !finished) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- derived finished state from score, intentional
       setFinished(true);
       addReviews(score.total);
     }

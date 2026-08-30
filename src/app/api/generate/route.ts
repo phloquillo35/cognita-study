@@ -8,27 +8,29 @@ import {
   mockQuiz,
   type GenerationMode,
 } from "@/lib/generate";
+import { getRagContext } from "@/lib/rag";
+import { isRateLimited } from "@/lib/rateLimit";
 
-const RATE_LIMIT = 10;
-const RATE_WINDOW_MS = 60_000;
 const MAX_CHARS = 20000;
-const hits = new Map<string, number[]>();
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
-  recent.push(now);
-  hits.set(ip, recent);
-  return recent.length > RATE_LIMIT;
-}
 
 export async function POST(request: NextRequest) {
   try {
-    const { text, subject, mode } = await request.json();
+    const body = await request.json();
+    const { text, subject, mode, ragQuery, rag, ragContext } = body as {
+      text: string;
+      subject?: string;
+      mode?: string;
+      ragQuery?: string;
+      rag?: boolean;
+      ragContext?: string;
+    };
+    const urlRag = request.nextUrl.searchParams.get("rag") === "true";
 
     const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    if (isRateLimited(ip)) {
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip")?.trim() ||
+      "127.0.0.1";
+    if (await isRateLimited(ip, "generate", 10, 60_000)) {
       return new Response(
         JSON.stringify({ error: "Too many requests, try again later" }),
         { status: 429, headers: { "Content-Type": "application/json" } }
@@ -51,17 +53,30 @@ export async function POST(request: NextRequest) {
     const m: GenerationMode = mode === "quiz" ? "quiz" : "flashcards";
     const subjectName = typeof subject === "string" && subject ? subject : "General";
 
+    // RAG injection — prepend context to text if requested
+    let ragContextStr = "";
+    if (typeof ragContext === "string" && ragContext.trim()) {
+      ragContextStr = ragContext.trim().slice(0, 4000);
+    } else if (typeof ragQuery === "string" && ragQuery.trim()) {
+      ragContextStr = getRagContext(ragQuery.trim(), subject);
+    } else if (rag === true || urlRag) {
+      ragContextStr = getRagContext(text.slice(0, 300), subject);
+    }
+    const augmentedText = ragContextStr
+      ? `Contexto RAG (material del estudiante):\n${ragContextStr}\n\n---\n\nMaterial base:\n${text}`
+      : text;
+
     const fallback = () =>
       m === "flashcards"
-        ? { flashcards: mockFlashcards(text) }
-        : { quizzes: mockQuiz(text) };
+        ? { flashcards: mockFlashcards(augmentedText) }
+        : { quizzes: mockQuiz(augmentedText) };
 
     if (process.env.OPENAI_API_KEY) {
       const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
       try {
         const result = await generateText({
           model: openai("gpt-4o-mini"),
-          prompt: buildGenerationPrompt({ text, subject: subjectName, mode: m }),
+          prompt: buildGenerationPrompt({ text: augmentedText, subject: subjectName, mode: m }),
           maxOutputTokens: 2000,
           temperature: 0.7,
         });

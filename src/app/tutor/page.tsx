@@ -13,6 +13,8 @@ import {
   Sparkles,
   ArrowLeft,
   RotateCcw,
+  Upload,
+  FileText as FileTextIcon,
 } from "lucide-react";
 
 interface Message {
@@ -44,6 +46,10 @@ export default function TutorPage() {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [subjectId, setSubjectId] = useState<string>(ALL_SUBJECTS[0]?.id ?? "am1");
+  const [ragFile, setRagFile] = useState<File | null>(null);
+  const [ragUploading, setRagUploading] = useState(false);
+  const [ragStatus, setRagStatus] = useState<string | null>(null);
+  const [ragEnabled, setRagEnabled] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -51,6 +57,7 @@ export default function TutorPage() {
       const saved = localStorage.getItem("cognita_tutor_messages");
       if (saved) {
         const parsed = JSON.parse(saved) as Message[];
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate messages from localStorage on mount, intentional
         if (Array.isArray(parsed) && parsed.length > 0) setMessages(parsed);
       }
     } catch {
@@ -79,6 +86,25 @@ export default function TutorPage() {
     }
   };
 
+  const handleRagUpload = async (file: File) => {
+    setRagUploading(true);
+    setRagStatus(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("subjectId", subjectId);
+      const res = await fetch("/api/rag/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Error al subir");
+      setRagStatus(`✓ ${data.filename} — ${data.chunks} chunks`);
+      setRagFile(file);
+    } catch (e) {
+      setRagStatus(`✗ ${e instanceof Error ? e.message : "Error"}`);
+    } finally {
+      setRagUploading(false);
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
 
@@ -104,6 +130,8 @@ export default function TutorPage() {
             content: m.content,
           })),
           subjectId,
+          rag: ragEnabled,
+          ragQuery: ragEnabled ? input.trim() : undefined,
         }),
       });
 
@@ -193,6 +221,45 @@ export default function TutorPage() {
           </Button>
         </div>
       </header>
+
+      {/* RAG Upload Bar */}
+      <div className="flex flex-wrap items-center gap-3 border-b border-[var(--border)] bg-[var(--muted)]/30 px-4 py-2">
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-sm hover:border-[var(--primary)]/50">
+          <Upload className="h-4 w-4" />
+          <span>{ragUploading ? "Subiendo..." : "Subir PDF/DOCX/TXT"}</span>
+          <input
+            type="file"
+            accept=".pdf,.docx,.txt"
+            className="hidden"
+            disabled={ragUploading}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleRagUpload(f);
+              e.target.value = "";
+            }}
+          />
+        </label>
+        {ragStatus && (
+          <span className="flex items-center gap-1 text-xs">
+            <FileTextIcon className="h-3 w-3" />
+            {ragStatus}
+          </span>
+        )}
+        {ragFile && (
+          <span className="rounded-full bg-[var(--primary)]/10 px-2 py-0.5 text-xs font-medium text-[var(--primary)]">
+            RAG activo
+          </span>
+        )}
+        <label className="ml-auto flex items-center gap-1.5 text-xs">
+          <input
+            type="checkbox"
+            checked={ragEnabled}
+            onChange={(e) => setRagEnabled(e.target.checked)}
+            className="rounded"
+          />
+          Usar RAG
+        </label>
+      </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6">

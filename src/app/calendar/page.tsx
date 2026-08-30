@@ -1,35 +1,42 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ChevronLeft, ChevronRight, CalendarRange, Brain, BookOpen, Layers } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, CalendarRange, Brain, BookOpen, Layers, Download, Filter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { useFlashcardStore } from "@/stores/flashcardStore";
 import { getAllSubjects } from "@/data/curriculum";
-import { buildCalendarDays, formatMonthYear, dayKey } from "@/lib/calendar";
+import { buildCalendarDays, formatMonthYear, dayKey, filterBySubject, toIcal } from "@/lib/calendar";
 import { es } from "date-fns/locale";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const ALL_SUBJECTS = getAllSubjects();
 const subjectMap = Object.fromEntries(ALL_SUBJECTS.map((s) => [s.id, s]));
 
-export default function CalendarPage() {
+function CalendarInner() {
   const cards = useFlashcardStore((s) => s.cards);
   const fetchAll = useFlashcardStore((s) => s.fetchAll);
   const syncStatus = useFlashcardStore((s) => s.syncStatus);
 
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth());
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const selectedSubject = searchParams.get("subject") ?? "all";
+
+  const now = useMemo(() => new Date(), []);
+  const [year, setYear] = useState(() => now.getFullYear());
+  const [month, setMonth] = useState(() => now.getMonth());
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
 
-  const days = useMemo(() => buildCalendarDays(cards, year, month, now), [cards, year, month, now]);
+  const filteredCards = useMemo(() => filterBySubject(cards, selectedSubject), [cards, selectedSubject]);
+
+  const days = useMemo(() => buildCalendarDays(filteredCards, year, month, now), [filteredCards, year, month, now]);
 
   const selectedDay = useMemo(() => (selectedKey ? days.find((d) => d.key === selectedKey) ?? null : null), [days, selectedKey]);
 
@@ -50,6 +57,27 @@ export default function CalendarPage() {
     setSelectedKey(dayKey(t));
   };
 
+  const handleSubjectChange = (value: string) => {
+    if (value === "all") {
+      router.push("/calendar");
+    } else {
+      router.push(`/calendar?subject=${encodeURIComponent(value)}`);
+    }
+  };
+
+  const handleExport = () => {
+    const ics = toIcal(days, "Cognita");
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `cognita-calendario-${year}-${String(month + 1).padStart(2, "0")}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-[var(--background)] pb-20">
       <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-xl">
@@ -65,7 +93,7 @@ export default function CalendarPage() {
               Calendario FSRS
             </h1>
             <p className="text-xs text-[var(--muted-foreground)]">
-              Vencimientos por día — {totalDueThisMonth} tarjetas este mes {syncStatus === "fallback" ? "· Modo local" : syncStatus === "syncing" ? "· Sincronizando…" : ""}
+              Vencimientos por día — {totalDueThisMonth} tarjetas este mes {selectedSubject !== "all" ? `· ${subjectMap[selectedSubject]?.name ?? selectedSubject}` : ""} {syncStatus === "fallback" ? "· Modo local" : syncStatus === "syncing" ? "· Sincronizando…" : ""}
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={handleToday}>
@@ -75,6 +103,34 @@ export default function CalendarPage() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-6">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-[var(--muted-foreground)]" aria-hidden="true" />
+            <label htmlFor="subject-filter" className="text-xs font-medium text-[var(--muted-foreground)]">
+              Filtrar
+            </label>
+          </div>
+          <select
+            id="subject-filter"
+            aria-label="Filtrar por materia"
+            role="combobox"
+            value={selectedSubject}
+            onChange={(e) => handleSubjectChange(e.target.value)}
+            className="h-9 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+          >
+            <option value="all">Todas las materias</option>
+            {ALL_SUBJECTS.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <Button variant="outline" size="sm" onClick={handleExport} aria-label="Exportar calendario en formato iCal">
+            <Download className="h-4 w-4" />
+            Exportar .ics
+          </Button>
+        </div>
+
         <Card className="mb-6">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -211,5 +267,13 @@ export default function CalendarPage() {
         </AnimatePresence>
       </main>
     </div>
+  );
+}
+
+export default function CalendarPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[var(--background)] flex items-center justify-center"><p className="text-sm text-[var(--muted-foreground)]">Cargando calendario…</p></div>}>
+      <CalendarInner />
+    </Suspense>
   );
 }

@@ -16,6 +16,7 @@ import {
   Edit3,
   Sparkles,
   Loader2,
+  Upload,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -83,6 +84,26 @@ export default function NotesPage() {
   const [newTags, setNewTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState<string | null>(null);
   const [expandedTags, setExpandedTags] = useState<string[]>([]);
+  const [ragUploading, setRagUploading] = useState(false);
+  const [ragStatus, setRagStatus] = useState<string | null>(null);
+
+  const handleRagUpload = async (file: File) => {
+    setRagUploading(true);
+    setRagStatus(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("subjectId", selectedSubject !== "all" ? selectedSubject : newSubject);
+      const res = await fetch("/api/rag/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Error");
+      setRagStatus(`✓ ${data.filename} — ${data.chunks} chunks`);
+    } catch (e) {
+      setRagStatus(`✗ ${e instanceof Error ? e.message : "Error"}`);
+    } finally {
+      setRagUploading(false);
+    }
+  };
 
   const filteredNotes = useMemo(() => {
     let result = notes;
@@ -106,6 +127,7 @@ export default function NotesPage() {
     );
   }, [notes, searchQuery, selectedSubject]);
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- static subject map, intentional manual memo (ALL_SUBJECTS is module-level)
   const subjectMap = useMemo(
     () => Object.fromEntries(ALL_SUBJECTS.map((s) => [s.id, s])),
     []
@@ -238,6 +260,22 @@ export default function NotesPage() {
             <Plus className="h-4 w-4 mr-1" />
             Nueva nota
           </Button>
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm font-medium hover:border-[var(--primary)]/50">
+            <Upload className="h-4 w-4" />
+            {ragUploading ? "Subiendo..." : "Subir PDF/DOCX/TXT"}
+            <input
+              type="file"
+              accept=".pdf,.docx,.txt"
+              className="hidden"
+              disabled={ragUploading}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleRagUpload(f);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          {ragStatus && <span className="text-xs text-[var(--muted-foreground)]">{ragStatus}</span>}
         </div>
 
         {/* Add/Edit Note Form */}

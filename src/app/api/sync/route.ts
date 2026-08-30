@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   if (!process.env.DATABASE_URL) {
     return new Response(
       JSON.stringify({

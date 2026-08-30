@@ -80,3 +80,51 @@ export function formatMonthYear(year: number, month: number, locale?: Locale): s
   const d = new Date(year, month, 1);
   return locale ? format(d, "MMMM yyyy", { locale }) : format(d, "MMMM yyyy");
 }
+
+export function filterBySubject(cards: Flashcard[], subjectId: string): Flashcard[] {
+  if (!subjectId || subjectId === "all") return cards;
+  return cards.filter((c) => c.subjectId === subjectId);
+}
+
+export function searchBySubject(cards: Flashcard[], query: string): Flashcard[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return cards;
+  return cards.filter((c) => c.subjectId.toLowerCase().includes(q));
+}
+
+function escapeIcal(text: string): string {
+  return text
+    .replace(/\\/g, "\\\\")
+    .replace(/;/g, "\\;")
+    .replace(/,/g, "\\,")
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "");
+}
+
+export function toIcal(days: CalendarDay[], calendarName = "Cognita"): string {
+  const lines: string[] = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Cognita//Calendar//EN",
+    "CALSCALE:GREGORIAN",
+    `X-WR-CALNAME:${escapeIcal(calendarName)}`,
+  ];
+  const dtstamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  for (const day of days) {
+    const dtstart = day.key.replace(/-/g, "");
+    for (const card of day.due) {
+      const uid = `${card.id}-${day.key}@cognita.app`;
+      const summary = escapeIcal((card.front || card.subjectId).slice(0, 80));
+      const description = escapeIcal(`${card.back.slice(0, 140)} - ${card.subjectId}`);
+      lines.push("BEGIN:VEVENT");
+      lines.push(`UID:${uid}`);
+      lines.push(`DTSTAMP:${dtstamp}`);
+      lines.push(`DTSTART;VALUE=DATE:${dtstart}`);
+      lines.push(`SUMMARY:${summary}`);
+      lines.push(`DESCRIPTION:${description}`);
+      lines.push("END:VEVENT");
+    }
+  }
+  lines.push("END:VCALENDAR");
+  return lines.join("\r\n");
+}

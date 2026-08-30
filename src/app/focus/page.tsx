@@ -11,11 +11,14 @@ import Link from "next/link";
 export default function FocusPage() {
   const { currentStreak, longestStreak, totalFocusMinutes } = useStreakStore();
   const [examDate, setExamDate] = useState<string>("");
-  const [now, setNow] = useState<number>(Date.now());
+  const [now, setNow] = useState<number>(() => Date.now());
 
   useEffect(() => {
     const saved = localStorage.getItem("cognita-exam-date");
-    if (saved) setExamDate(saved);
+    if (saved) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync saved exam date from localStorage on mount, intentional
+      setExamDate(saved);
+    }
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);

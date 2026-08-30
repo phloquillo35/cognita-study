@@ -1,12 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const LOCAL_BASE = path.join(process.cwd(), 'public', 'materials', 'primer-anio');
-const MANIFEST_PATH = path.join(process.cwd(), 'public', 'materials', 'manifest.json');
 
 interface FileInfo {
   subject: string;

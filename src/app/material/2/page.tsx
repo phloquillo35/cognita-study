@@ -1,10 +1,8 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { BookOpen, Loader } from "lucide-react";
+import { Loader } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
@@ -23,7 +21,7 @@ export default function MaterialPage2() {
   const [material, setMaterial] = useState<Material | null>(null);
 
   useEffect(() => {
-    const mockContent = {
+    const mockContent: Material = {
       id: "2",
       filename: "algebra-practice.docx",
       type: "docx",
@@ -31,6 +29,7 @@ export default function MaterialPage2() {
       content: "Contenido simulado de práctica de álgebra - matrizes, determinantes, sistemas lineales. Ejercicios de práctica para el curso AGA."
     };
     if (mockContent) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- mock demo content load on mount, intentional
       setMaterial(mockContent);
     }
     setIsLoading(false);

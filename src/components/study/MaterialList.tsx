@@ -1,9 +1,7 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Progress } from "@/components/ui/Progress";
 import Link from "next/link";
 import { BookOpen, Loader } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -14,10 +12,6 @@ interface Material {
   type: "pdf" | "docx" | "other";
   size?: number;
   extracted?: boolean;
-}
-
-interface SubjectMaterials {
-  [subjectId: string]: Material[];
 }
 
 export default function MaterialList({ subjectId }: { subjectId: string }) {
@@ -32,9 +26,10 @@ export default function MaterialList({ subjectId }: { subjectId: string }) {
   ];
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync subjectId prop → state, intentional
     setMaterials(initialMaterials);
     setIsLoading(false);
-  }, [subjectId]);
+  }, [subjectId]); // eslint-disable-line react-hooks/exhaustive-deps -- initialMaterials is static, only subjectId triggers reload
 
   if (isLoading) {
     return (
@@ -70,12 +65,12 @@ export default function MaterialList({ subjectId }: { subjectId: string }) {
           </p>
         )}
 
-        {materials.map((material: Material) => (
+        {materials.map((material: Material, index: number) => (
           <motion.div
             key={material.id}
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 + Math.random() * 0.2 }}
+            transition={{ delay: 0.1 + index * 0.05 }}
             className="flex items-center gap-3 p-3 rounded bg-primary/5 hover:bg-primary/10 transition-colors"
           >
             <div

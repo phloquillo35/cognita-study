@@ -17,7 +17,6 @@ export default function PomodoroTimer() {
   const [running, setRunning] = useState(false);
   const addFocusMinutes = useStreakStore((s) => s.addFocusMinutes);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const earnedRef = useRef(0);
 
   useEffect(() => {
     if (!running) return;

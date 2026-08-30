@@ -1,14 +1,15 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { motion } from "framer-motion";
-import { Brain, GitBranch, Loader2 } from "lucide-react";
+import { Brain, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 
 function LoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const error = searchParams.get("error");
@@ -123,7 +124,7 @@ function LoginForm() {
                 size="sm"
                 onClick={() => {
                   localStorage.setItem("cognita_demo", "1");
-                  window.location.href = "/dashboard";
+                  router.push("/dashboard");
                 }}
               >
                 Continuar en modo demo

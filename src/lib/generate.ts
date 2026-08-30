@@ -109,7 +109,8 @@ export function mockFlashcards(text: string): GeneratedFlashcard[] {
   }));
 }
 
-export function mockQuiz(text: string): GeneratedQuiz[] {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- mockQuiz signature preserves text param for future real implementation
+export function mockQuiz(_text: string): GeneratedQuiz[] {
   return [
     {
       question: "Según el material provisto, ¿cuál es la idea principal?",

@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Sparkles,
-  Loader2,
-  Check,
-  Upload,
-  FileText,
-  X,
-} from "lucide-react";
+import { Sparkles, Loader2, Check, Upload } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { getAllSubjects } from "@/data/curriculum";

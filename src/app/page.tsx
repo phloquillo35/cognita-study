@@ -18,11 +18,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
-import {
-  CURRICULUM,
-  CATEGORY_LABELS,
-  CATEGORY_COLORS,
-} from "@/data/curriculum";
+import { CURRICULUM, CATEGORY_COLORS } from "@/data/curriculum";
 import type { SubjectCategory } from "@/types";
 
 const container = {

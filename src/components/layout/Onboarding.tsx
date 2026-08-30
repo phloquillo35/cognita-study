@@ -19,6 +19,7 @@ export function Onboarding() {
   useEffect(() => {
     try {
       if (localStorage.getItem("cognita_onboarded") !== "1") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- show onboarding if not onboarded, intentional mount sync
         setOpen(true);
       }
     } catch {

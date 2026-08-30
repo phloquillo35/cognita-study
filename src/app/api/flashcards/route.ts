@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     return new Response(JSON.stringify(data), {
       headers: { "Content-Type": "application/json" },
     });
-  } catch (e) {
+  } catch {
     return new Response(JSON.stringify({ error: "db-error", fallback: true }), {
       status: 200,
       headers: { "Content-Type": "application/json", "X-Fallback": "localStorage" },

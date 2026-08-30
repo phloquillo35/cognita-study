@@ -12,9 +12,8 @@ import {
   Target,
   ChevronRight,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Progress } from "@/components/ui/Progress";
 import MaterialList from "@/components/study/MaterialList";
 import { getSubjectById, CATEGORY_COLORS, CATEGORY_LABELS } from "@/data/curriculum";
 import Link from "next/link";
@@ -345,7 +344,7 @@ export default function SubjectPage() {
           >
             <h2 className="mb-3 text-lg font-semibold">Ejercicios Tipo Parcial</h2>
             <div className="space-y-3">
-              {subject.partialExamples.map((ex, idx) => (
+              {subject.partialExamples.map((ex) => (
                 <Card key={ex.topic} className="group cursor-pointer transition-all hover:border-[var(--primary)]/30 hover:shadow-md">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3 mb-2">

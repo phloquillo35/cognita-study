@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Brain, Target, Trophy, Flame, Clock, BookOpen, Layers } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useFlashcardStore } from "@/stores/flashcardStore";
 import { useGeneratorStore } from "@/stores/generatorStore";
 import { useStreakStore, lastNDays } from "@/stores/streakStore";
@@ -14,16 +13,16 @@ import { retrievability } from "@/lib/fsrs";
 
 export default function DashboardPage() {
   const [demoMode, setDemoMode] = useState(false);
-  const pathname = usePathname();
 
   // Detectar modo demo desde localStorage (setado por login)
   useEffect(() => {
     try {
       const isDemo = localStorage.getItem("cognita_demo") === "1";
       if (isDemo) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- sync demo flag from localStorage on mount, intentional
         setDemoMode(true);
       }
-    } catch (e) {
+    } catch {
       // localStorage not available (e.g., private window)
     }
   }, []);
@@ -53,18 +52,18 @@ export default function DashboardPage() {
   const fsrsCards = cards.filter(
     (c) => c.stability != null && c.lastReviewed
   );
-  const retention =
-    fsrsCards.length > 0
-      ? Math.round(
-          (fsrsCards.reduce((acc, c) => {
-            const elapsed =
-              (Date.now() - new Date(c.lastReviewed!).getTime()) / 86400000;
-            return acc + retrievability(elapsed, c.stability!);
-          }, 0) /
-            fsrsCards.length) *
-            100
-        )
-      : null;
+  const retention = useMemo(() => {
+    if (fsrsCards.length === 0) return null;
+    return Math.round(
+      (fsrsCards.reduce((acc, c) => {
+        // eslint-disable-next-line react-hooks/purity -- retention snapshot needs current time, intentional
+        const elapsed = (Date.now() - new Date(c.lastReviewed!).getTime()) / 86400000;
+        return acc + retrievability(elapsed, c.stability!);
+      }, 0) /
+        fsrsCards.length) *
+        100
+    );
+  }, [fsrsCards]);
 
   return (
     <div className="min-h-screen bg-[var(--background)]">

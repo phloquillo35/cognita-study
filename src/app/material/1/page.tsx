@@ -1,10 +1,8 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { BookOpen, Loader } from "lucide-react";
+import { Loader } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
@@ -31,6 +29,7 @@ export default function MaterialPage1() {
       content: "Contenido simulado del manual de matemática - primer año. Tópicos: funciones, límites, derivadas, integrales. Este es el material del primer semestre de AM I."
     };
     if (mockContent) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- mock demo content load on mount, intentional
       setMaterial(mockContent);
     }
     setIsLoading(false);

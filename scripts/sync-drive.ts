@@ -38,7 +38,7 @@ function downloadDriveFolder() {
     const foldUrl = `https://drive.google.com/drive/folders/${FOLDER_ID}`;
     execSync(`gdown --folder "${foldUrl}" --quiet 2>/dev/null`);
     console.log("✅ Descarga completada via gdown");
-  } catch (e) {
+  } catch {
     console.log("⚠️  gdown falló (puede que el folder no sea público)");
     console.log("   Colocá manualmente la carpeta en:", LOCAL_BASE);
     console.log("   La carpeta debe tener 8 subcarpetas: am1, aga, fis1, ing1, led, aed, ac1, spn");
