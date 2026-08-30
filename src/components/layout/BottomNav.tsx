@@ -11,6 +11,7 @@ import {
   BookOpen,
   MessageCircle,
   CalendarDays,
+  CalendarRange,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { href: "/notes", label: "Notas", Icon: BookOpen },
   { href: "/tutor", label: "Tutor", Icon: MessageCircle },
   { href: "/plan", label: "Plan", Icon: CalendarDays },
+  { href: "/calendar", label: "Calendario", Icon: CalendarRange },
 ];
 
 export function BottomNav() {

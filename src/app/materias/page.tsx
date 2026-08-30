@@ -44,7 +44,7 @@ export default function SubjectsPage() {
                   const elapsed =
                     (Date.now() - new Date(c.lastReviewed!).getTime()) /
                     86400000;
-                  return acc + retrievability(c.stability!, elapsed);
+                  return acc + retrievability(elapsed, c.stability!);
                 }, 0) /
                   fsrsCards.length) *
                   100
