@@ -1,36 +1,25 @@
 # AGENTS.md (Workflow Context) — cognita-study
-> Generado: 2026-08-29 21:18:59 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/cognita-study
+> Generado: 2026-08-29 21:27:56 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/cognita-study
 
 ## 🎯 Objetivo actual
-Loop2 Backend Real — Supabase conectado, APIs CRUD + stores híbridos, DB push OK
+Loop3 Deploy Vercel — prod https://cognita-study.vercel.app, 24 routes, env vars, QA smoke ok
 
 ## 📍 Estado actual
-  Branch: main · Working tree: SUCIO (14 archivos)
+  Branch: main · Working tree: SUCIO (2 archivos)
 
   Cambios sin commit:
-   AGENTS.md | 382 ++------------------------------------------------------------
-   1 file changed, 7 insertions(+), 375 deletions(-)
+   AGENTS.md | 97 ++-------------------------------------------------------------
+   LOOP.md   | 85 +++++++++++++++++++++++--------------------------------
+   2 files changed, 38 insertions(+), 144 deletions(-)
    M AGENTS.md
-  M  LOOP.md
-  M  prisma/schema.prisma
-  A  src/app/api/flashcards/[id]/route.ts
-  A  src/app/api/flashcards/route.ts
-  A  src/app/api/notes/[id]/route.ts
-  A  src/app/api/notes/route.ts
-  A  src/app/api/study-plans/[id]/route.ts
-  A  src/app/api/study-plans/route.ts
-  M  src/lib/db.ts
-  A  src/lib/sync.ts
-  M  src/stores/flashcardStore.ts
-  M  src/stores/noteStore.ts
-  M  src/stores/studyPlanStore.ts
+   M LOOP.md
 
   Últimos commits:
+  9a4e75d chore(deploy): add postinstall prisma generate for Vercel build
+  eabf959 feat(backend): Loop2 — Supabase + CRUD APIs + stores híbridos
   f4323f6 fix(loop1): desbloqueo build — tsc 0, tests 42/42, lint 0 errors
   4320ceb docs: update AGENTS.md con estado real y guía de continuidad
   2a760d1 feat(ux): navegación global inferior, mejoras del tutor (materia/historial) y panorama por materia
-  e64c376 feat(ux): ErrorBoundary global, onboarding inicial y aria-labels en navegación
-  b814abc feat(backend): scaffold Prisma con carga dinámica y /api/sync health check
 
 ## ✅ Tareas activas
   (sin tareas activas)
@@ -42,6 +31,9 @@ _(continuar donde quedó opencode. Si hay tareas in_progress arriba, retomar la 
   .
 .env.example
 .env.local
+.vercel
+.vercel/project.json
+.vercel/README.txt
 AGENTS.md
 CLAUDE.md
 eslint.config.mjs
@@ -95,7 +87,8 @@ vitest.config.ts
     start: next start
     lint: eslint
     test: vitest run
+    postinstall: prisma generate
     typecheck: npx tsc --noEmit
 
 ## 🧠 Decisiones tomadas
-    _(decisiones de diseño/acuerdo a registrar aquí)_
+      _(decisiones de diseño/acuerdo a registrar aquí)_
