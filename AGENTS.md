@@ -352,7 +352,7 @@ Cada una de las 36 materias incluye:
 | # | Hash | Descripción |
 |---|------|-------------|
 | 1 | `ae5a659` | feat: auth email/password, tutor conectado, dashboard con progreso real, UI rica de materia y generador de ejercicios para las 36 materias |
-| 2 | *pendiente* | `merge origin/main`: unifica la línea local (auth email, tutor con curriculum, generador 36 materias, dashboard real) con Loops 5-6 (RAG, calendario FSRS, examen, focus, PWA v2, rateLimit, 60 tests, deploy prod) |
+| 2 | `7752f98` | `merge origin/main`: unifica la línea local (auth email, tutor con curriculum, generador 36 materias, dashboard real) con Loops 5-6 (RAG, calendario FSRS, examen, focus, PWA v2, rateLimit, 60 tests, deploy prod) |
 
 ### Historia Prevía
 
