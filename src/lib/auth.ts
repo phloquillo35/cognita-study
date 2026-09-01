@@ -73,8 +73,3 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
-
-export const providerMap = [
-  { id: "github", name: "GitHub" },
-  { id: "google", name: "Google" },
-];

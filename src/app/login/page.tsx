@@ -11,8 +11,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 type AuthMode = "login" | "register";
 
 function LoginForm() {
-  const searchParams = useSearchParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
   const oauthError = searchParams.get("error");
 
@@ -246,6 +246,21 @@ function LoginForm() {
               Al continuar, aceptas nuestros Terminos de Servicio y Politica de
               Privacidad.
             </p>
+            <div className="mt-4 text-center">
+              <p className="text-xs text-[var(--warning)] fw-medium">
+                OAuth no configurado — usando modo demo
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  localStorage.setItem("cognita_demo", "1");
+                  router.push("/dashboard");
+                }}
+              >
+                Continuar en modo demo
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </motion.div>

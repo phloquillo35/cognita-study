@@ -8,6 +8,16 @@ interface LatexRendererProps {
   className?: string;
 }
 
+function sanitizeHtml(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
+    .replace(/\son\w+="[^"]*"/gi, "")
+    .replace(/\son\w+='[^']*'/gi, "")
+    .replace(/(href|src)="javascript:[^"]*"/gi, '$1="#"');
+}
+
 function renderLatexSegment(text: string): string {
   try {
     return katex.renderToString(text, {
@@ -54,7 +64,7 @@ function processContent(content: string): string {
 }
 
 export default function LatexRenderer({ content, className }: LatexRendererProps) {
-  const html = useMemo(() => processContent(content), [content]);
+  const html = useMemo(() => sanitizeHtml(processContent(content)), [content]);
 
   return (
     <div

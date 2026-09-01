@@ -14,11 +14,15 @@ import {
   Calendar,
   BookOpen,
   Edit3,
+  Sparkles,
+  Loader2,
+  Upload,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { getAllSubjects } from "@/data/curriculum";
 import { useNoteStore } from "@/stores/noteStore";
+import { useGeneratorStore } from "@/stores/generatorStore";
 import LatexRenderer from "@/components/study/LatexRenderer";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -28,6 +32,46 @@ const ALL_SUBJECTS = getAllSubjects();
 
 export default function NotesPage() {
   const { notes, addNote, removeNote, updateNote } = useNoteStore();
+  const addDeck = useGeneratorStore((s) => s.addDeck);
+  const [genNote, setGenNote] = useState<{ noteId: string; count: number } | null>(
+    null
+  );
+  const [genNoteLoading, setGenNoteLoading] = useState<string | null>(null);
+
+  const handleGenerateQuiz = async (noteId: string) => {
+    const note = notes.find((n) => n.id === noteId);
+    if (!note) return;
+    setGenNoteLoading(noteId);
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: `${note.title}\n\n${note.content}`,
+          subject: subjectMap[note.subjectId]?.name ?? "General",
+          mode: "quiz",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Error");
+      if (data.quizzes?.length) {
+        addDeck({
+          title: `Quiz — ${note.title}`,
+          subjectId: note.subjectId,
+          type: "quiz",
+          flashcards: [],
+          quizzes: data.quizzes,
+        });
+        setGenNote({ noteId, count: data.quizzes.length });
+      } else {
+        setGenNote({ noteId, count: 0 });
+      }
+    } catch {
+      setGenNote({ noteId, count: 0 });
+    } finally {
+      setGenNoteLoading(null);
+    }
+  };
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSubject, setSelectedSubject] = useState<string>("all");
   const [showForm, setShowForm] = useState(false);
@@ -40,6 +84,26 @@ export default function NotesPage() {
   const [newTags, setNewTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState<string | null>(null);
   const [expandedTags, setExpandedTags] = useState<string[]>([]);
+  const [ragUploading, setRagUploading] = useState(false);
+  const [ragStatus, setRagStatus] = useState<string | null>(null);
+
+  const handleRagUpload = async (file: File) => {
+    setRagUploading(true);
+    setRagStatus(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("subjectId", selectedSubject !== "all" ? selectedSubject : newSubject);
+      const res = await fetch("/api/rag/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Error");
+      setRagStatus(`✓ ${data.filename} — ${data.chunks} chunks`);
+    } catch (e) {
+      setRagStatus(`✗ ${e instanceof Error ? e.message : "Error"}`);
+    } finally {
+      setRagUploading(false);
+    }
+  };
 
   const filteredNotes = useMemo(() => {
     let result = notes;
@@ -58,11 +122,12 @@ export default function NotesPage() {
       result = result.filter((n) => n.subjectId === selectedSubject);
     }
 
-    return result.sort(
+    return [...result].sort(
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
   }, [notes, searchQuery, selectedSubject]);
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- static subject map, intentional manual memo (ALL_SUBJECTS is module-level)
   const subjectMap = useMemo(
     () => Object.fromEntries(ALL_SUBJECTS.map((s) => [s.id, s])),
     []
@@ -145,7 +210,7 @@ export default function NotesPage() {
       <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4">
           <Link href="/">
-            <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" aria-label="Volver al inicio">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
@@ -195,6 +260,22 @@ export default function NotesPage() {
             <Plus className="h-4 w-4 mr-1" />
             Nueva nota
           </Button>
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm font-medium hover:border-[var(--primary)]/50">
+            <Upload className="h-4 w-4" />
+            {ragUploading ? "Subiendo..." : "Subir PDF/DOCX/TXT"}
+            <input
+              type="file"
+              accept=".pdf,.docx,.txt"
+              className="hidden"
+              disabled={ragUploading}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) handleRagUpload(f);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          {ragStatus && <span className="text-xs text-[var(--muted-foreground)]">{ragStatus}</span>}
         </div>
 
         {/* Add/Edit Note Form */}
@@ -423,11 +504,41 @@ export default function NotesPage() {
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="rounded-xl bg-[var(--muted)]/50 p-6">
-                    <LatexRenderer content={expandedNote.content} className="text-[var(--foreground)]" />
-                  </div>
-                </CardContent>
+                 <CardContent>
+                   <div className="rounded-xl bg-[var(--muted)]/50 p-6">
+                     <LatexRenderer content={expandedNote.content} className="text-[var(--foreground)]" />
+                   </div>
+                   <div className="mt-4 flex flex-wrap items-center gap-3">
+                     <Button
+                       variant="outline"
+                       size="sm"
+                       onClick={() => handleGenerateQuiz(expandedNote.id)}
+                       disabled={genNoteLoading === expandedNote.id}
+                     >
+                       {genNoteLoading === expandedNote.id ? (
+                         <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                       ) : (
+                         <Sparkles className="h-4 w-4 mr-1" />
+                       )}
+                       Generar quiz con IA
+                     </Button>
+                     {genNote?.noteId === expandedNote.id &&
+                       genNote.count > 0 && (
+                         <Link
+                           href="/exam"
+                           className="text-sm font-medium text-[var(--primary)] hover:underline"
+                         >
+                           Ir a practicar ({genNote.count}) →
+                         </Link>
+                       )}
+                     {genNote?.noteId === expandedNote.id &&
+                       genNote.count === 0 && (
+                         <span className="text-sm text-[var(--muted-foreground)]">
+                           No se pudo generar el quiz.
+                         </span>
+                       )}
+                   </div>
+                 </CardContent>
               </Card>
             </motion.div>
           )}
@@ -560,3 +671,4 @@ export default function NotesPage() {
     </div>
   );
 }
+

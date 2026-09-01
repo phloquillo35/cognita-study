@@ -8,6 +8,9 @@ export default function OfflinePage() {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync navigator.onLine on mount, intentional external subscription
+    setIsOnline(navigator.onLine);
+
     const handleOnline = () => setIsOnline(true);
     window.addEventListener("online", handleOnline);
     return () => window.removeEventListener("online", handleOnline);

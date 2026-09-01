@@ -1,4 +1,9 @@
 import type { Flashcard } from "@/types";
+import {
+  reviewFSRS,
+  type FSRSGrade,
+  type FSRSState,
+} from "./fsrs";
 
 export type ReviewQuality = 0 | 1 | 2 | 3 | 4 | 5;
 
@@ -7,53 +12,53 @@ export interface ReviewResult {
   interval: number;
   easeFactor: number;
   repetitions: number;
+  stability: number;
+  difficulty: number;
 }
 
-export interface FlashcardData {
-  id: string;
-  subjectId: string;
-  front: string;
-  back: string;
-  frontLatex?: string;
-  backLatex?: string;
-  interval: number;
-  easeFactor: number;
-  repetitions: number;
-  nextReview: Date;
-  lastReviewed?: Date;
-  reviewCount: number;
-  correctCount: number;
-  createdAt: Date;
+// Mapea la calidad SM-2 (0-5) a los grados FSRS (1-4).
+function qualityToGrade(quality: ReviewQuality): FSRSGrade {
+  if (quality <= 1) return 1;
+  if (quality === 2) return 2;
+  if (quality === 3) return 3;
+  return 4;
 }
 
 export function calculateNextReview(
-  card: Pick<Flashcard, "interval" | "easeFactor" | "repetitions">,
+  card: Pick<
+    Flashcard,
+    "interval" | "easeFactor" | "repetitions" | "stability" | "difficulty" | "lastReviewed"
+  >,
   quality: ReviewQuality
 ): ReviewResult {
-  let { interval, easeFactor, repetitions } = card;
+  const grade = qualityToGrade(quality);
+  const prev: FSRSState | null =
+    card.stability != null && card.difficulty != null
+      ? { stability: card.stability, difficulty: card.difficulty, reps: card.repetitions }
+      : null;
+  const elapsedDays = card.lastReviewed
+    ? Math.max(
+        0,
+        (Date.now() - new Date(card.lastReviewed).getTime()) / 86400000
+      )
+    : 0;
 
-  easeFactor =
-    easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
-  if (easeFactor < 1.3) easeFactor = 1.3;
+  const review = reviewFSRS(prev, grade, elapsedDays);
 
-  if (quality < 3) {
-    repetitions = 0;
-    interval = 1;
-  } else {
-    repetitions = repetitions + 1;
-    if (repetitions === 1) {
-      interval = 1;
-    } else if (repetitions === 2) {
-      interval = 6;
-    } else {
-      interval = Math.round(interval * easeFactor);
-    }
-  }
+  // Facilidad derivada de la dificultad para mantener compatibilidad de UI (1.5..3.0)
+  const easeFactor = +(
+    3.0 -
+    ((review.state.difficulty - 1) / 9) * 1.5
+  ).toFixed(2);
 
-  const now = new Date();
-  const nextReview = new Date(now.getTime() + interval * 24 * 60 * 60 * 1000);
-
-  return { nextReview, interval, easeFactor, repetitions };
+  return {
+    nextReview: review.nextReview,
+    interval: review.interval,
+    easeFactor,
+    repetitions: review.state.reps,
+    stability: review.state.stability,
+    difficulty: review.state.difficulty,
+  };
 }
 
 export function getQualityLabel(quality: ReviewQuality): string {

@@ -2,24 +2,28 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { getAllSubjects } from "@/data/curriculum";
+import { useStudySessionStore } from "@/stores/studySessionStore";
 import {
   Send,
   Brain,
   User,
   Sparkles,
   ArrowLeft,
-  BookOpen,
+  RotateCcw,
+  Upload,
+  FileText as FileTextIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useStudySessionStore } from "@/stores/studySessionStore";
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  timestamp: Date;
 }
 
 const WELCOME_MESSAGE: Message = {
@@ -34,7 +38,10 @@ Puedo ayudarte con:
 • **Sistemas** — Redes, bases de datos, ingeniería de software
 
 ¿En qué materia necesitas ayuda hoy?`,
+  timestamp: new Date(),
 };
+
+const ALL_SUBJECTS = getAllSubjects();
 
 export default function TutorPage() {
   return (
@@ -52,91 +59,138 @@ export default function TutorPage() {
 
 function TutorChat() {
   const searchParams = useSearchParams();
-  const subjectId = searchParams.get("subject");
   const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [subjectId, setSubjectId] = useState<string>(
+    searchParams.get("subject") ?? ALL_SUBJECTS[0]?.id ?? "am1"
+  );
+  const [ragFile, setRagFile] = useState<File | null>(null);
+  const [ragUploading, setRagUploading] = useState(false);
+  const [ragStatus, setRagStatus] = useState<string | null>(null);
+  const [ragEnabled, setRagEnabled] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const logSession = useStudySessionStore((state) => state.logSession);
 
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem("cognita_tutor_messages");
+      if (saved) {
+        const parsed = JSON.parse(saved) as Message[];
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate messages from localStorage on mount, intentional
+        if (Array.isArray(parsed) && parsed.length > 0) setMessages(parsed);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
+  }, [messages]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("cognita_tutor_messages", JSON.stringify(messages));
+    } catch {
+      // ignore
+    }
+  }, [messages]);
+
+  const handleClear = () => {
+    setMessages([WELCOME_MESSAGE]);
+    try {
+      localStorage.removeItem("cognita_tutor_messages");
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleRagUpload = async (file: File) => {
+    setRagUploading(true);
+    setRagStatus(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("subjectId", subjectId);
+      const res = await fetch("/api/rag/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Error al subir");
+      setRagStatus(`✓ ${data.filename} — ${data.chunks} chunks`);
+      setRagFile(file);
+    } catch (e) {
+      setRagStatus(`✗ ${e instanceof Error ? e.message : "Error"}`);
+    } finally {
+      setRagUploading(false);
+    }
+  };
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isTyping) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
       content: input.trim(),
+      timestamp: new Date(),
     };
     logSession(0, 1, 0);
 
-    const assistantId = (Date.now() + 1).toString();
-
-    setMessages((prev) => [
-      ...prev,
-      userMessage,
-      { id: assistantId, role: "assistant", content: "" },
-    ]);
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
     setInput("");
-    setIsLoading(true);
-    setError(null);
+    setIsTyping(true);
 
     try {
-      const history = [...messages, userMessage].slice(1).map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-
-      const res = await fetch("/api/tutor", {
+      const response = await fetch("/api/tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history, subjectId: subjectId || undefined }),
+        body: JSON.stringify({
+          messages: nextMessages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+          subjectId,
+          rag: ragEnabled,
+          ragQuery: ragEnabled ? input.trim() : undefined,
+        }),
       });
 
-      if (!res.ok) {
-        let detail = "Error al conectarse con el tutor.";
-        try {
-          const data = await res.json();
-          if (data?.error) detail = data.error;
-        } catch {
-          /* not json */
-        }
-        throw new Error(detail);
+      if (!response.ok) {
+        throw new Error("Error en la API del Tutor");
       }
 
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
+      const data = await response.json();
+      const assistantContent =
+        data.content || "No se pudo obtener la respuesta del tutor.";
 
-      if (!reader) {
-        const text = await res.text();
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantId ? { ...m, content: text } : m
-          )
-        );
-      } else {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === assistantId ? { ...m, content: m.content + chunk } : m
-            )
-          );
-        }
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Error al conectar con el tutor."
-      );
-      setMessages((prev) => prev.filter((m) => m.id !== assistantId));
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: assistantContent,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("Error en la IA:", error);
+
+      const fallbackMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: `Entiendo tu pregunta sobre "${input}". Como tutor Socrático, te guiaré con preguntas:
+
+        1. **¿Qué concepto clave** creés que está involucrado en tu pregunta?
+        2. **¿Cómo podrías acercarte** al problema paso a paso?
+        3. **¿Qué información** tenés que aún no conocés?
+
+        Intentá responderte a vos mismo primero, y yo puedo ayudarte a refinarte. ¿Por dónde empezás?`,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, fallbackMessage]);
     } finally {
-      setIsLoading(false);
+      setIsTyping(false);
     }
   };
 
@@ -151,10 +205,9 @@ function TutorChat() {
     <div className="flex h-screen flex-col bg-[var(--background)]">
       {/* Header */}
       <header className="flex items-center gap-4 border-b border-[var(--border)] bg-[var(--background)]/80 px-4 py-3 backdrop-blur-xl">
-        <Link href="/">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+        <Link href="/" className="flex items-center gap-2">
+          <ArrowLeft className="h-5 w-5" />
+          <span>Volver al inicio</span>
         </Link>
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)]/10">
@@ -165,15 +218,69 @@ function TutorChat() {
             <p className="text-xs text-[var(--muted-foreground)]">
               Modo guía — te ayudo a llegar a la respuesta
             </p>
+            <span className="text-xs text-[var(--warning)] font-medium ml-2">Modo Demo</span>
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" size="sm">
-            <BookOpen className="h-4 w-4 mr-2" />
-            Historial
+          <div className="relative">
+            <select
+              value={subjectId}
+              onChange={(e) => setSubjectId(e.target.value)}
+              aria-label="Materia del tutor"
+              className="appearance-none rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 pr-8 text-sm text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none"
+            >
+              {ALL_SUBJECTS.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <Button variant="ghost" size="sm" onClick={handleClear}>
+            <RotateCcw className="h-4 w-4 mr-1" />
+            Nueva conversación
           </Button>
         </div>
       </header>
+
+      {/* RAG Upload Bar */}
+      <div className="flex flex-wrap items-center gap-3 border-b border-[var(--border)] bg-[var(--muted)]/30 px-4 py-2">
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-1.5 text-sm hover:border-[var(--primary)]/50">
+          <Upload className="h-4 w-4" />
+          <span>{ragUploading ? "Subiendo..." : "Subir PDF/DOCX/TXT"}</span>
+          <input
+            type="file"
+            accept=".pdf,.docx,.txt"
+            className="hidden"
+            disabled={ragUploading}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleRagUpload(f);
+              e.target.value = "";
+            }}
+          />
+        </label>
+        {ragStatus && (
+          <span className="flex items-center gap-1 text-xs">
+            <FileTextIcon className="h-3 w-3" />
+            {ragStatus}
+          </span>
+        )}
+        {ragFile && (
+          <span className="rounded-full bg-[var(--primary)]/10 px-2 py-0.5 text-xs font-medium text-[var(--primary)]">
+            RAG activo
+          </span>
+        )}
+        <label className="ml-auto flex items-center gap-1.5 text-xs">
+          <input
+            type="checkbox"
+            checked={ragEnabled}
+            onChange={(e) => setRagEnabled(e.target.checked)}
+            className="rounded"
+          />
+          Usar RAG
+        </label>
+      </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6">
@@ -209,35 +316,36 @@ function TutorChat() {
                       : ""
                   }`}
                 >
-                  {message.content === "" && isLoading ? (
-                    <div className="flex gap-1">
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--muted-foreground)]" style={{ animationDelay: "0ms" }} />
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--muted-foreground)]" style={{ animationDelay: "150ms" }} />
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--muted-foreground)]" style={{ animationDelay: "300ms" }} />
-                    </div>
-                  ) : (
-                    <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                      {message.content.split("**").map((part, i) =>
-                        i % 2 === 1 ? (
-                          <strong key={i}>{part}</strong>
-                        ) : (
-                          <span key={i}>{part}</span>
-                        )
-                      )}
-                    </div>
-                  )}
+                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+                    {message.content.split("**").map((part, i) =>
+                      i % 2 === 1 ? (
+                        <strong key={i}>{part}</strong>
+                      ) : (
+                        <span key={i}>{part}</span>
+                      )
+                    )}
+                  </div>
                 </Card>
               </motion.div>
             ))}
           </AnimatePresence>
 
-          {error && (
+          {isTyping && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="rounded-xl bg-[var(--destructive)]/10 p-3 text-sm text-[var(--destructive)]"
+              className="flex gap-3"
             >
-              {error}
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--primary)]">
+                <Sparkles className="h-4 w-4 text-white" />
+              </div>
+              <Card className="p-4">
+                <div className="flex gap-1">
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--muted-foreground)]" style={{ animationDelay: "0ms" }} />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--muted-foreground)]" style={{ animationDelay: "150ms" }} />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--muted-foreground)]" style={{ animationDelay: "300ms" }} />
+                </div>
+              </Card>
             </motion.div>
           )}
 
@@ -253,23 +361,23 @@ function TutorChat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Escribí tu pregunta... (Shift+Enter para nueva línea)"
+              placeholder="Escribí tu pregunta..."
               className="flex-1 resize-none rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
               rows={1}
-              disabled={isLoading}
+              disabled={isTyping}
             />
             <Button
               onClick={handleSend}
-              disabled={!input.trim() || isLoading}
+              disabled={!input.trim() || isTyping}
               size="icon"
               className="shrink-0"
             >
               <Send className="h-4 w-4" />
             </Button>
           </div>
-          <p className="mt-2 text-center text-xs text-[var(--muted-foreground)]">
-            Tutor Socrático — guía el aprendizaje con preguntas, no da respuestas directas
-          </p>
+<p className="mt-2 text-center text-xs text-[var(--muted-foreground)]">
+      Tutor Socrático — guía el aprendizaje con preguntas, no da respuestas directas. <span className="font-medium">Escribí tu pregunta arriba y presioná Enter o clickeá el botón de envío.</span>
+</p>
         </div>
       </div>
     </div>

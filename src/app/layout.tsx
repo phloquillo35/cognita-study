@@ -1,9 +1,12 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
+import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
+import { Onboarding } from "@/components/layout/Onboarding";
+import { AppShell } from "@/components/layout/AppShell";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -15,7 +18,6 @@ export const metadata: Metadata = {
   description:
     "Plataforma de estudio con inteligencia artificial para estudiantes de ingeniería. Tutorías Socráticas, ejercicios adaptativos, y plan de estudios inteligente.",
   manifest: "/manifest.json",
-  themeColor: "#6366F1",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -35,6 +37,10 @@ export const metadata: Metadata = {
   ],
 };
 
+export const viewport: Viewport = {
+  themeColor: "#6366F1",
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -43,14 +49,19 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <SessionProvider>{children}</SessionProvider>
-        </ThemeProvider>
+<SessionProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <ErrorBoundary>
+              <AppShell>{children}</AppShell>
+            </ErrorBoundary>
+            <Onboarding />
+          </ThemeProvider>
+        </SessionProvider>
         <Script
           id="sw-register"
           strategy="afterInteractive"
