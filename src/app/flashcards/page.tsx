@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
 import { getAllSubjects } from "@/data/curriculum";
 import { useFlashcardStore } from "@/stores/flashcardStore";
+import { useStudySessionStore } from "@/stores/studySessionStore";
 import {
   calculateNextReview,
   type ReviewQuality,
@@ -190,6 +191,7 @@ const QUALITY_CONFIG: {
 
 export default function FlashcardsPage() {
   const { cards, addCard, removeCard, updateCard } = useFlashcardStore();
+  const logSession = useStudySessionStore((state) => state.logSession);
   const [selectedSubject, setSelectedSubject] = useState<string>("all");
   const [isFlipped, setIsFlipped] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -226,6 +228,7 @@ export default function FlashcardsPage() {
       reviewCount: currentCard.reviewCount + 1,
       correctCount: currentCard.correctCount + (quality >= 3 ? 1 : 0),
     });
+    logSession(0, 1, quality >= 3 ? 1 : 0);
     setIsFlipped(false);
     setReviewedCount((prev) => prev + 1);
     setCurrentIndex((prev) =>

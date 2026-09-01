@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
@@ -13,12 +13,13 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useStudySessionStore } from "@/stores/studySessionStore";
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
-  timestamp: Date;
 }
 
 const WELCOME_MESSAGE: Message = {
@@ -33,88 +34,110 @@ Puedo ayudarte con:
 • **Sistemas** — Redes, bases de datos, ingeniería de software
 
 ¿En qué materia necesitas ayuda hoy?`,
-  timestamp: new Date(),
-};
-
-const SAMPLE_RESPONSES: Record<string, string> = {
-  default: `Entiendo tu pregunta. Como tutor Socrático, voy a guiarte paso a paso:
-
-1. **Identifiquemos** el concepto clave
-2. **Construyamos** el razonamiento juntos
-3. **Resolvamos** el problema
-
-¿Podrías contarme qué ya sabés sobre este tema? Así puedo adaptar mi explicación a tu nivel.`,
-  matematica: `¡Excelente elección! La matemática es fundamental para la ingeniería.
-
-Para ayudarte mejor, necesito que me digas:
-• **¿Qué tema específico?** (ej: derivadas, integrales, matrices)
-• **¿Qué nivel?** (ej: estoy aprendiendo, necesito repasar, o quiero ejercicios difíciles)
-• **¿Tenés algún ejercicio concreto?**
-
-Mientras tanto, recordá que en Cognita Study puedo:
-✅ Explicarte conceptos con ejemplos
-✅ Guiarte paso a paso en ejercicios
-✅ Verificar tus respuestas con motor matemático
-✅ Generar ejercicios adaptativos`,
-  fisica: `La física es apasionante y muy aplicada a la ingeniería.
-
-Contame:
-• **¿Qué rama?** (Mecánica, Electromagnetismo, Termodinámica)
-• **¿Qué tipo de problema?** (Conceptual, matemático, de aplicación)
-• **¿Hay algún ejercicio específico que necesites resolver?**
-
-Puedo ayudarte con:
-📐 Explicaciones con diagrams
-📊 Resolución paso a paso
-🔬 Conexiones con el mundo real
-📝 Ejercicios personalizados`,
 };
 
 export default function TutorPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center bg-[var(--background)]">
+          <Sparkles className="h-8 w-8 animate-spin text-[var(--primary)]" />
+        </div>
+      }
+    >
+      <TutorChat />
+    </Suspense>
+  );
+}
+
+function TutorChat() {
+  const searchParams = useSearchParams();
+  const subjectId = searchParams.get("subject");
   const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
   const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const logSession = useStudySessionStore((state) => state.logSession);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, isLoading]);
 
   const handleSend = async () => {
-    if (!input.trim() || isTyping) return;
+    if (!input.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
       content: input.trim(),
-      timestamp: new Date(),
     };
+    logSession(0, 1, 0);
 
-    setMessages((prev) => [...prev, userMessage]);
+    const assistantId = (Date.now() + 1).toString();
+
+    setMessages((prev) => [
+      ...prev,
+      userMessage,
+      { id: assistantId, role: "assistant", content: "" },
+    ]);
     setInput("");
-    setIsTyping(true);
+    setIsLoading(true);
+    setError(null);
 
-    // Simulate AI response (will be replaced with real API)
-    setTimeout(() => {
-      const lowerInput = input.toLowerCase();
-      let response = SAMPLE_RESPONSES.default;
+    try {
+      const history = [...messages, userMessage].slice(1).map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
 
-      if (lowerInput.includes("matem") || lowerInput.includes("calculo") || lowerInput.includes("algebra")) {
-        response = SAMPLE_RESPONSES.matematica;
-      } else if (lowerInput.includes("física") || lowerInput.includes("fisica") || lowerInput.includes("mecánica")) {
-        response = SAMPLE_RESPONSES.fisica;
+      const res = await fetch("/api/tutor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: history, subjectId: subjectId || undefined }),
+      });
+
+      if (!res.ok) {
+        let detail = "Error al conectarse con el tutor.";
+        try {
+          const data = await res.json();
+          if (data?.error) detail = data.error;
+        } catch {
+          /* not json */
+        }
+        throw new Error(detail);
       }
 
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: response,
-        timestamp: new Date(),
-      };
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
 
-      setMessages((prev) => [...prev, assistantMessage]);
-      setIsTyping(false);
-    }, 1500);
+      if (!reader) {
+        const text = await res.text();
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId ? { ...m, content: text } : m
+          )
+        );
+      } else {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId ? { ...m, content: m.content + chunk } : m
+            )
+          );
+        }
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Error al conectar con el tutor."
+      );
+      setMessages((prev) => prev.filter((m) => m.id !== assistantId));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -186,36 +209,35 @@ export default function TutorPage() {
                       : ""
                   }`}
                 >
-                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                    {message.content.split("**").map((part, i) =>
-                      i % 2 === 1 ? (
-                        <strong key={i}>{part}</strong>
-                      ) : (
-                        <span key={i}>{part}</span>
-                      )
-                    )}
-                  </div>
+                  {message.content === "" && isLoading ? (
+                    <div className="flex gap-1">
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--muted-foreground)]" style={{ animationDelay: "0ms" }} />
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--muted-foreground)]" style={{ animationDelay: "150ms" }} />
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--muted-foreground)]" style={{ animationDelay: "300ms" }} />
+                    </div>
+                  ) : (
+                    <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+                      {message.content.split("**").map((part, i) =>
+                        i % 2 === 1 ? (
+                          <strong key={i}>{part}</strong>
+                        ) : (
+                          <span key={i}>{part}</span>
+                        )
+                      )}
+                    </div>
+                  )}
                 </Card>
               </motion.div>
             ))}
           </AnimatePresence>
 
-          {isTyping && (
+          {error && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex gap-3"
+              className="rounded-xl bg-[var(--destructive)]/10 p-3 text-sm text-[var(--destructive)]"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--primary)]">
-                <Sparkles className="h-4 w-4 text-white" />
-              </div>
-              <Card className="p-4">
-                <div className="flex gap-1">
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--muted-foreground)]" style={{ animationDelay: "0ms" }} />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--muted-foreground)]" style={{ animationDelay: "150ms" }} />
-                  <span className="h-2 w-2 animate-bounce rounded-full bg-[var(--muted-foreground)]" style={{ animationDelay: "300ms" }} />
-                </div>
-              </Card>
+              {error}
             </motion.div>
           )}
 
@@ -234,11 +256,11 @@ export default function TutorPage() {
               placeholder="Escribí tu pregunta... (Shift+Enter para nueva línea)"
               className="flex-1 resize-none rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-sm focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
               rows={1}
-              disabled={isTyping}
+              disabled={isLoading}
             />
             <Button
               onClick={handleSend}
-              disabled={!input.trim() || isTyping}
+              disabled={!input.trim() || isLoading}
               size="icon"
               className="shrink-0"
             >

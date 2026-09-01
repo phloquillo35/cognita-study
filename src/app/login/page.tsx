@@ -1,17 +1,72 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
 import { motion } from "framer-motion";
-import { Brain, GitBranch, Loader2 } from "lucide-react";
+import { Brain, Loader2, LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 
+type AuthMode = "login" | "register";
+
 function LoginForm() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-  const error = searchParams.get("error");
+  const router = useRouter();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const oauthError = searchParams.get("error");
+
+  const [mode, setMode] = useState<AuthMode>("login");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const inputClass =
+    "w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)]";
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      if (mode === "register") {
+        const res = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          setError(data.error || "Error al crear la cuenta");
+          setLoading(false);
+          return;
+        }
+      }
+
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Email o contraseña incorrectos");
+        setLoading(false);
+        return;
+      }
+
+      setLoading(false);
+      router.push(callbackUrl);
+      router.refresh();
+    } catch {
+      setError("Ocurrió un error. Intenta de nuevo.");
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-[var(--background)]">
@@ -42,15 +97,103 @@ function LoginForm() {
           </CardHeader>
 
           <CardContent className="space-y-4 pt-4">
-            {error && (
+            {/* Tabs */}
+            <div className="grid grid-cols-2 gap-1 rounded-xl bg-[var(--background)] p-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("login");
+                  setError(null);
+                }}
+                className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-colors ${
+                  mode === "login"
+                    ? "bg-[var(--card)] text-[var(--foreground)] shadow-sm"
+                    : "text-[var(--muted-foreground)]"
+                }`}
+              >
+                <LogIn className="h-4 w-4" />
+                Iniciar sesión
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("register");
+                  setError(null);
+                }}
+                className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-colors ${
+                  mode === "register"
+                    ? "bg-[var(--card)] text-[var(--foreground)] shadow-sm"
+                    : "text-[var(--muted-foreground)]"
+                }`}
+              >
+                <UserPlus className="h-4 w-4" />
+                Crear cuenta
+              </button>
+            </div>
+
+            {(error || oauthError) && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 className="p-3 rounded-xl bg-[var(--destructive)]/10 text-[var(--destructive)] text-sm text-center"
               >
-                Error al iniciar sesion. Intenta de nuevo.
+                {error || "Error al iniciar sesión. Intenta de nuevo."}
               </motion.div>
             )}
+
+            {/* Email/Password form */}
+            <form onSubmit={handleAuth} className="space-y-3">
+              {mode === "register" && (
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Nombre (opcional)"
+                  className={inputClass}
+                />
+              )}
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Correo electrónico"
+                required
+                className={inputClass}
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Contraseña"
+                required
+                minLength={6}
+                className={inputClass}
+              />
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full h-12 text-base"
+              >
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : mode === "register" ? (
+                  "Crear cuenta"
+                ) : (
+                  "Iniciar sesión"
+                )}
+              </Button>
+            </form>
+
+            <div className="relative my-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[var(--border)]" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-[var(--card)] px-2 text-[var(--muted-foreground)]">
+                  o continúa con
+                </span>
+              </div>
+            </div>
 
             <motion.div
               initial={{ opacity: 0, x: -10 }}
@@ -98,17 +241,6 @@ function LoginForm() {
                 Continuar con Google
               </Button>
             </motion.div>
-
-            <div className="relative my-2">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[var(--border)]" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-[var(--card)] px-2 text-[var(--muted-foreground)]">
-                  o
-                </span>
-              </div>
-            </div>
 
             <p className="text-center text-xs text-[var(--muted-foreground)] leading-relaxed">
               Al continuar, aceptas nuestros Terminos de Servicio y Politica de

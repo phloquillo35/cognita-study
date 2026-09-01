@@ -120,13 +120,15 @@ cognita-study/
 │   │   └── curriculum.ts      # 36 materias del Plan 1877 (3,300+ líneas)
 │   ├── lib/
 │   │   ├── auth.ts            # NextAuth config
+│   │   ├── exerciseGenerator.ts # Generador de ejercicios desde el temario
 │   │   ├── utils.ts           # cn(), formatPercentage(), getInitials()
 │   │   ├── theme.ts           # Paleta de colores dark/light
 │   │   └── spaced-repetition.ts # Algoritmo SM-2
 │   ├── stores/
 │   │   ├── flashcardStore.ts  # Estado de flashcards + localStorage
 │   │   ├── noteStore.ts       # Estado de notas + localStorage
-│   │   └── studyPlanStore.ts  # Estado de planes de estudio
+│   │   ├── studyPlanStore.ts  # Estado de planes de estudio
+│   │   └── studySessionStore.ts # Sesiones de estudio (racha, horas, ejercicios)
 │   └── types/
 │       └── index.ts           # TypeScript interfaces
 ├── .env.example               # Variables de entorno requeridas
@@ -143,22 +145,28 @@ cognita-study/
 
 ### 1. Dashboard Principal (`/`)
 - Bento Grid con estadísticas del estudiante
+- **Stats conectadas a datos reales**: materia totales, ejercicios resueltos, racha de días y horas de estudio provenientes de `useStudySessionStore` (localStorage)
+- **Progreso por materia en vivo**: la barra `Progress` de cada materia refleja el % de temas completados del plan de estudio
 - Grid del plan de estudios (36 materias por nivel)
-- Quick actions: Ir al Tutor, Practicar
+- Quick actions: Ir al Tutor, Practicar, Plan de Estudio (navegables)
 - Sección de features de IA
 - Navegación a detalle de cada materia
 
 ### 2. Tutor IA Socrático (`/tutor`)
 - Interfaz de chat con streaming en tiempo real
+- Consume `/api/tutor` con GPT-4o-mini (Vercel AI SDK `streamText`, streaming de texto plano) + fallback mock socrático
+- **Usa el material del curriculum**: inyecta temario, bibliografía, objetivos, conceptos y ejercicios tipo parcial de la materia según `?subject=id`
+- Desde `/subject/[id]`, los botones "Tutor IA" y "Preguntar al Tutor" abren el tutor con el contexto de esa materia
 - Prompt Socrático: guía con preguntas, nunca da respuestas directas
 - Detección de temas (matemática, física, programación)
 - Soporte LaTeX para fórmulas matemáticas
-- API route con OpenAI GPT-4o-mini + fallback mock
 
 ### 3. Práctica Adaptativa (`/practice`)
-- Selector de materia
+- Selector de materia (ahora las **36 materias** del plan)
+- **Generador de ejercicios automático** (`src/lib/exerciseGenerator.ts`): produce 8 ejercicios de opción múltiple por materia desde el temario real — temas del syllabus, conceptos clave, objetivos, créditos, horas semanales, categoría y ejercicios tipo parcial (con distractores de otras materias, sin opciones duplicadas)
 - Ejercicios de opción múltiple con explicaciones
 - Puntuación y progreso por sesión
+- **Registro de sesiones**: al completar una ronda se guardan ejercicios, aciertos y tiempo en `studySessionStore` (alimenta racha/horas del dashboard)
 - Barra de progreso animada
 
 ### 4. Flashcards con SM-2 (`/flashcards`)
@@ -185,14 +193,16 @@ cognita-study/
 - Progress bar por materia
 - Creación de planes con selector de materia y fecha
 
-### 7. Login (`/login`)
-- NextAuth.js v5
-- GitHub OAuth
-- Google OAuth
-- UI animada con Framer Motion
+### 7. Login/Registro (`/login`)
+- **Crear cuenta con email y contraseña** (endpoint `/api/register`, bcrypt para hash de contraseñas)
+- **Iniciar sesión con email y contraseña** (NextAuth CredentialsProvider + Prisma/PostgreSQL)
+- GitHub OAuth y Google OAuth (opcional, requiere credenciales)
+- UI animada con Framer Motion (tabs login/registro)
 
 ### 8. Detalle de Materia (`/subject/[id]`)
 - Información completa de cada materia
+- **Material completo del plan**: descripción, conceptos clave, objetivos, competencias, metodología de cursada, forma de evaluación (regularidad/promoción/recuperatorio/criterios), bibliografía oficial y complementaria
+- **Ejercicios tipo parcial desplegables**: cada uno con pregunta, dificultad y solución resuelta
 - Temario con dificultad estimada
 - Correlativas
 - Acciones rápidas (Tutor, Practicar, Flashcards)
@@ -300,15 +310,28 @@ Cada una de las 36 materias incluye:
 
 ## Lo que Queda Pendiente
 
+### ⭐ PENDIENTE URGENTE — Login/Registro con email (falta configurar la base de datos)
+El código ya está listo (CredentialsProvider + endpoint `/api/register` + formulario email/contraseña en `/login`). Falta únicamente configurar la base de datos desde la computadora del usuario (tiene el connection string de Supabase en su casa):
+
+- [ ] **1. Agregar `DATABASE_URL` en `.env.local`** (Supabase/PostgreSQL):
+      - Supabase Dashboard → Settings → Database → Connection string
+      - Pegar el string (formato: `postgresql://...pooler.supabase.com:6543/postgres`) en `.env.local`
+- [ ] **2. Crear las tablas** ejecutando: `npx prisma db push`
+- [ ] **3. Reiniciar el servidor** (`npm run dev`) y ya podrás crear cuenta con email/contraseña
+- [ ] (Opcional) Agregar `OPENAI_API_KEY` para activar el tutor IA real (sin esto usa mock socrático con el material del curriculum)
+
 ### Prioridad Alta
-- [ ] **Conectar IA real**: Configurar `OPENAI_API_KEY` en `.env.local` para activar el tutor streaming
-- [ ] **PostgreSQL database**: Configurar en Vercel/Neon y ejecutar `npx prisma db push`
-- [ ] **Login funcional**: Configurar credenciales de GitHub OAuth y Google OAuth en NextAuth
-- [ ] **Mostrar datos nuevos en UI**: Actualizar `/subject/[id]` para mostrar bibliografía, metodología, evaluación, objetivos, competencias y ejercicios tipo parcial
+- [x] **Login por email/contraseña**: Implementado (CredentialsProvider + registro en `/api/register`)
+- [x] **Tutor IA conectado**: La UI `/tutor` consume `/api/tutor` con streaming real (OpenAI GPT-4o-mini) y fallback mock. Inyecta el material del curriculum (temario, bibliografía, objetivos, ejercicios tipo parcial) según `subjectId`.
+- [x] **Mostrar datos nuevos en UI**: `/subject/[id]` ya muestra bibliografía, metodología, evaluación, objetivos, competencias y ejercicios tipo parcial
+- [ ] **Conectar IA real**: Configurar `OPENAI_API_KEY` en `.env.local` para activar el tutor streaming (sin esto usa mock)
+- [ ] **PostgreSQL database**: (ver pasos urgentes arriba) ejecutar `npx prisma db push`
+- [ ] **Login OAuth funcional**: Configurar credenciales de GitHub OAuth y Google OAuth en NextAuth (opcional si usás email)
 
 ### Prioridad Media
-- [ ] **Dashboard con progreso real**: Conectar con PostgreSQL para tracking de progreso
-- [ ] **Generador de ejercicios con IA**: Usar OpenAI para generar ejercicios adaptativos
+- [x] **Dashboard con progreso real**: Stats conectadas a `studySessionStore` (ejercicios, racha, horas) y progreso por materia desde `studyPlanStore`
+- [x] **Generador de ejercicios desde el temario**: `exerciseGenerator.ts` genera 8 ejercicios por materia para las 36 materias (distractores de otras materias, sin duplicados)
+- [ ] **Generador de ejercicios con IA**: Usar OpenAI para variar/ampliar los ejercicios generados
 - [ ] **Subida de PDFs**: Implementar upload de apuntes/PDFs con RAG
 - [ ] **Flashcards con IA**: Generar flashcards automáticamente desde el temario
 - [ ] **Estadísticas avanzadas**: Gráficos de progreso, heatmap de estudio, streaks
@@ -395,3 +418,13 @@ DATABASE_URL=postgresql://...
 *Última actualización: 26 de agosto de 2026*
 *Desarrollado por: opencode (big-pickle model)*
 *Repositorio: https://github.com/phloquillo35/cognita-study*
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

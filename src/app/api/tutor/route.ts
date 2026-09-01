@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { streamText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
+import { getAllSubjects, getSubjectById } from "@/data/curriculum";
+import type { Subject } from "@/types";
 
 const SOCRATIC_SYSTEM_PROMPT = `Eres el Tutor IA de Cognita Study, una plataforma de estudio universitario para la carrera de Ingeniería en Sistemas de Información en la UTN de Tucumán, Argentina.
 
@@ -26,7 +28,47 @@ FORMATO:
 - Sé conciso pero completo
 - Siempre terminá con una pregunta guía para el siguiente paso`;
 
-export const runtime = "edge";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+function buildSubjectContext(subject: Subject): string {
+  const topics = subject.topics.map((t) => `• ${t.name} — ${t.description}`).join("\n");
+  const bibliography = [
+    ...subject.bibliography.official,
+    ...subject.bibliography.complementary,
+  ]
+    .map((b) => `• ${b}`)
+    .join("\n");
+  const partials = subject.partialExamples
+    .map(
+      (p) =>
+        `• Tema: ${p.topic}\n  Pregunta: ${p.question}\n  Solución: ${p.solution}`
+    )
+    .join("\n");
+
+  return `MATERIA ACTUAL: ${subject.name} (${subject.code}) — Nivel ${subject.level}
+DESCRIPCIÓN: ${subject.description}
+CONCEPTOS CLAVE: ${subject.keyConcepts.join(", ")}
+TEMARIO OFICIAL:
+${topics}
+BIBLIOGRAFÍA (oficial y complementaria):
+${bibliography}
+OBJETIVOS:
+${subject.objectives.map((o) => `• ${o}`).join("\n")}
+EJERCICIOS TIPO PARCIAL:
+${partials}
+
+Usá este material como base para tus guías, explicaciones y preguntas. Cuando el estudiante pregunte sobre esta materia, anclate en el temario y los conceptos oficiales del plan de la UTN.`;
+}
+
+function buildAllSubjectsIndex(): string {
+  return getAllSubjects()
+    .map(
+      (s) =>
+        `${s.id}: ${s.name} (${s.code}, Nivel ${s.level}) — ${s.keyConcepts.join(", ")}`
+    )
+    .join("\n");
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,34 +81,62 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const subject = subjectId ? getSubjectById(subjectId) : undefined;
+    const subjectContext = subject
+      ? buildSubjectContext(subject)
+      : `MATERIAS DISPONIBLES (usá la que corresponda según la pregunta del estudiante):
+${buildAllSubjectsIndex()}`;
+
+    const systemPrompt = `${SOCRATIC_SYSTEM_PROMPT}
+
+CONTEXTO DEL PLAN DE ESTUDIOS (UTN - Lic. en Sistemas, Plan 1877):
+${subjectContext}`;
+
     if (process.env.OPENAI_API_KEY) {
       const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
       const result = streamText({
         model: openai("gpt-4o-mini"),
-        system: SOCRATIC_SYSTEM_PROMPT,
+        system: systemPrompt,
         messages: messages.map((msg: { role: string; content: string }) => ({
           role: msg.role as "user" | "assistant" | "system",
           content: msg.content,
         })),
-        onFinish: async ({ text }) => {
-          if (subjectId) {
-            console.log(`Tutor response for subject ${subjectId}: ${text.length} chars`);
-          }
-        },
       });
 
-      return result.toUIMessageStreamResponse();
+      const textStream = result.textStream;
+
+      const { readable, writable } = new TransformStream();
+      const writer = writable.getWriter();
+      const encoder = new TextEncoder();
+
+      (async () => {
+        try {
+          for await (const chunk of textStream) {
+            writer.write(encoder.encode(chunk));
+          }
+        } catch (err) {
+          console.error("Tutor stream error:", err);
+        } finally {
+          writer.close();
+        }
+      })();
+
+      return new Response(readable, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "no-cache, no-transform",
+        },
+      });
     }
 
     const mockResponse = generateMockResponse(
       messages[messages.length - 1]?.content || ""
     );
 
-    return new Response(
-      JSON.stringify({ content: mockResponse, role: "assistant" }),
-      { headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(mockResponse, {
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
   } catch (error) {
     console.error("Tutor API error:", error);
     return new Response(

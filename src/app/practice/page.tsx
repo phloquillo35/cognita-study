@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -10,89 +10,22 @@ import {
   RotateCcw,
   ChevronRight,
   Sparkles,
-  Clock,
   Target,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
-import { CURRICULUM, getSubjectsByLevel } from "@/data/curriculum";
+import { useStudySessionStore } from "@/stores/studySessionStore";
+import {
+  generateExercises,
+  getSubjectsForPractice,
+  type GeneratedExercise,
+} from "@/lib/exerciseGenerator";
 import Link from "next/link";
 
-interface Exercise {
-  id: string;
-  question: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
-  difficulty: number;
+function nowMs(): number {
+  return Date.now();
 }
-
-const SAMPLE_EXERCISES: Record<string, Exercise[]> = {
-  am1: [
-    {
-      id: "am1-ex1",
-      question: "Calcule la derivada de $f(x) = x^3 + 2x^2 - 5x + 3$",
-      options: [
-        "$3x^2 + 4x - 5$",
-        "$3x^2 + 2x - 5$",
-        "$x^2 + 4x - 5$",
-        "$3x^2 + 4x + 5$",
-      ],
-      correctIndex: 0,
-      explanation:
-        "Aplicamos la regla de la potencia: $\\frac{d}{dx}[x^n] = nx^{n-1}$. Para $x^3$ obtenemos $3x^2$, para $2x^2$ obtenemos $4x$, para $-5x$ obtenemos $-5$, y la constante 3 se anula.",
-      difficulty: 2,
-    },
-    {
-      id: "am1-ex2",
-      question:
-        "¿Cuál es el límite $\\lim_{x \\to 0} \\frac{\\sin x}{x}$?",
-      options: ["0", "1", "$\\infty$", "No existe"],
-      correctIndex: 1,
-      explanation:
-        "Este es uno de los límites fundamentales. Se puede demostrar con el Teorema del Sandwich o con series de Taylor: $\\sin x \\approx x$ cuando $x \\to 0$, por lo tanto el límite es 1.",
-      difficulty: 2,
-    },
-    {
-      id: "am1-ex3",
-      question:
-        "Encuentre las raíces de $x^2 - 5x + 6 = 0$",
-      options: [
-        "$x = 2, x = 3$",
-        "$x = -2, x = -3$",
-        "$x = 1, x = 6$",
-        "$x = -2, x = 3$",
-      ],
-      correctIndex: 0,
-      explanation:
-        "Factorizando: $x^2 - 5x + 6 = (x-2)(x-3) = 0$, entonces $x = 2$ o $x = 3$. Verificación: $2^2 - 5(2) + 6 = 4 - 10 + 6 = 0$ ✓ y $3^2 - 5(3) + 6 = 9 - 15 + 6 = 0$ ✓",
-      difficulty: 1,
-    },
-    {
-      id: "am1-ex4",
-      question:
-        "¿Cuál es la integral $\\int 2x \\, dx$?",
-      options: ["$x^2 + C$", "$2x^2 + C$", "$x + C$", "$2 + C$"],
-      correctIndex: 0,
-      explanation:
-        "Por la regla de la potencia a la inversa: $\\int x^n \\, dx = \\frac{x^{n+1}}{n+1} + C$. Entonces $\\int 2x \\, dx = 2 \\cdot \\frac{x^2}{2} + C = x^2 + C$.",
-      difficulty: 1,
-    },
-  ],
-  aga: [
-    {
-      id: "aga-ex1",
-      question:
-        "Si $A = \\begin{pmatrix} 1 & 2 \\\\ 3 & 4 \\end{pmatrix}$, ¿cuál es $\\det(A)$?",
-      options: ["$-2$", "$2$", "$10$", "$-10$"],
-      correctIndex: 0,
-      explanation:
-        "Para una matriz 2×2: $\\det(A) = ad - bc = (1)(4) - (2)(3) = 4 - 6 = -2$.",
-      difficulty: 2,
-    },
-  ],
-};
 
 export default function PracticePage() {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
@@ -100,24 +33,39 @@ export default function PracticePage() {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
   const [score, setScore] = useState({ correct: 0, total: 0 });
+  const logSession = useStudySessionStore((state) => state.logSession);
+  const sessionStartRef = useRef<number | null>(null);
 
-  const exercises = selectedSubject
-    ? SAMPLE_EXERCISES[selectedSubject] || []
-    : [];
+  const exercises = useMemo<GeneratedExercise[]>(
+    () => (selectedSubject ? generateExercises(selectedSubject) : []),
+    [selectedSubject]
+  );
   const currentExercise = exercises[currentExerciseIndex];
 
-  const allSubjects = CURRICULUM.levels.flatMap((l) =>
-    l.subjects.filter((s) => s.category === "math" || s.category === "physics")
-  );
+  const startSession = (subjectId: string) => {
+    sessionStartRef.current = nowMs();
+    setSelectedSubject(subjectId);
+    setCurrentExerciseIndex(0);
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    setScore({ correct: 0, total: 0 });
+  };
 
   const handleAnswer = (index: number) => {
     if (selectedAnswer !== null) return;
+    if (sessionStartRef.current === null) {
+      sessionStartRef.current = nowMs();
+    }
     setSelectedAnswer(index);
     setShowExplanation(true);
-    setScore((prev) => ({
-      correct: prev.correct + (index === currentExercise.correctIndex ? 1 : 0),
-      total: prev.total + 1,
-    }));
+    const newCorrect =
+      score.correct + (index === currentExercise.correctIndex ? 1 : 0);
+    const newTotal = score.total + 1;
+    setScore({ correct: newCorrect, total: newTotal });
+    if (newTotal === exercises.length) {
+      logSession((nowMs() - sessionStartRef.current) / 60000, newTotal, newCorrect);
+      sessionStartRef.current = null;
+    }
   };
 
   const handleNext = () => {
@@ -129,11 +77,17 @@ export default function PracticePage() {
   };
 
   const handleReset = () => {
+    if (sessionStartRef.current !== null) {
+      logSession((nowMs() - sessionStartRef.current) / 60000, score.total, score.correct);
+      sessionStartRef.current = null;
+    }
     setCurrentExerciseIndex(0);
     setSelectedAnswer(null);
     setShowExplanation(false);
     setScore({ correct: 0, total: 0 });
   };
+
+  const allSubjects = getSubjectsForPractice();
 
   if (!selectedSubject) {
     return (
@@ -164,23 +118,11 @@ export default function PracticePage() {
               >
                 <Card
                   className="cursor-pointer transition-all hover:border-[var(--primary)]/50 hover:shadow-lg"
-                  onClick={() => setSelectedSubject(subject.id)}
+                  onClick={() => startSession(subject.id)}
                 >
                   <CardContent className="flex items-center gap-4 p-6">
-                    <div
-                      className={`rounded-2xl p-4 ${
-                        subject.category === "math"
-                          ? "bg-[var(--math)]/10"
-                          : "bg-[var(--physics)]/10"
-                      }`}
-                    >
-                      <Target
-                        className={`h-6 w-6 ${
-                          subject.category === "math"
-                            ? "text-[var(--math)]"
-                            : "text-[var(--physics)]"
-                        }`}
-                      />
+                    <div className="rounded-2xl bg-[var(--primary)]/10 p-4">
+                      <Target className="h-6 w-6 text-[var(--primary)]" />
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold">{subject.name}</h3>
@@ -205,10 +147,9 @@ export default function PracticePage() {
         <Card className="max-w-md text-center">
           <CardContent className="p-8">
             <Sparkles className="mx-auto mb-4 h-12 w-12 text-[var(--primary)]" />
-            <h2 className="text-xl font-bold mb-2">Próximamente</h2>
+            <h2 className="text-xl font-bold mb-2">Sin ejercicios</h2>
             <p className="text-[var(--muted-foreground)] mb-4">
-              Los ejercicios para esta materia estarán disponibles pronto con
-              nuestro generador IA adaptativo.
+              No se pudieron generar ejercicios para esta materia.
             </p>
             <Button onClick={() => setSelectedSubject(null)}>
               <ArrowLeft className="h-4 w-4 mr-2" />

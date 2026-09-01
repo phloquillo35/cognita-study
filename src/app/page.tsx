@@ -18,12 +18,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
-import {
-  CURRICULUM,
-  CATEGORY_LABELS,
-  CATEGORY_COLORS,
-} from "@/data/curriculum";
+import { CURRICULUM, CATEGORY_COLORS } from "@/data/curriculum";
 import type { SubjectCategory } from "@/types";
+import { useStudySessionStore } from "@/stores/studySessionStore";
+import { useStudyPlanStore } from "@/stores/studyPlanStore";
+import { useSyncExternalStore } from "react";
 
 const container = {
   hidden: { opacity: 0 },
@@ -46,13 +45,6 @@ const categoryIcons: Record<SubjectCategory, React.ReactNode> = {
   general: <BookOpen className="h-5 w-5" />,
 };
 
-const stats = [
-  { label: "Materias Totales", value: "30+", icon: <BookOpen className="h-5 w-5" />, color: "text-[var(--primary)]" },
-  { label: "Ejercicios Resueltos", value: "0", icon: <Target className="h-5 w-5" />, color: "text-[var(--success)]" },
-  { label: "Racha Actual", value: "0 días", icon: <Zap className="h-5 w-5" />, color: "text-[var(--warning)]" },
-  { label: "Horas de Estudio", value: "0h", icon: <Clock className="h-5 w-5" />, color: "text-[var(--cs)]" },
-];
-
 export default function HomePage() {
   const totalSubjects = CURRICULUM.levels.reduce(
     (acc, level) => acc + level.subjects.length,
@@ -67,6 +59,37 @@ export default function HomePage() {
       ),
     0
   );
+
+  const isMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const totalExercises = useStudySessionStore((state) =>
+    state.sessions.reduce((acc, s) => acc + s.exercises, 0)
+  );
+  const totalMinutes = useStudySessionStore((state) =>
+    state.sessions.reduce((acc, s) => acc + s.minutes, 0)
+  );
+  const streak = useStudySessionStore((state) => state.getStreak());
+  const studyPlans = useStudyPlanStore((state) => state.studyPlans);
+
+  const getSubjectPlan = (subjectId: string) =>
+    studyPlans.find((p) => p.subjectId === subjectId);
+
+  const getSubjectProgress = (subjectId: string) => {
+    const plan = getSubjectPlan(subjectId);
+    if (!plan || plan.topics.length === 0) return 0;
+    const completed = plan.topics.filter((t) => t.completed).length;
+    return Math.round((completed / plan.topics.length) * 100);
+  };
+
+  const stats = [
+    { label: "Materias Totales", value: `${totalSubjects}`, icon: <BookOpen className="h-5 w-5" />, color: "text-[var(--primary)]" },
+    { label: "Ejercicios Resueltos", value: `${totalExercises}`, icon: <Target className="h-5 w-5" />, color: "text-[var(--success)]" },
+    { label: "Racha Actual", value: `${isMounted ? streak : 0} días`, icon: <Zap className="h-5 w-5" />, color: "text-[var(--warning)]" },
+    { label: "Horas de Estudio", value: `${isMounted ? Math.floor(totalMinutes / 60) : 0}h`, icon: <Clock className="h-5 w-5" />, color: "text-[var(--cs)]" },
+  ];
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
@@ -192,20 +215,22 @@ export default function HomePage() {
               </Card>
             </Link>
 
-            <Card className="group cursor-pointer transition-all hover:border-[var(--warning)]/50 hover:shadow-lg hover:shadow-[var(--warning)]/5">
-              <CardContent className="flex items-center gap-4 p-6">
-                <div className="rounded-2xl bg-[var(--warning)]/10 p-4 transition-colors group-hover:bg-[var(--warning)]/20">
-                  <TrendingUp className="h-6 w-6 text-[var(--warning)]" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold">Plan de Estudio</h3>
-                  <p className="text-sm text-[var(--muted-foreground)]">
-                    Cronograma personalizado para parciales
-                  </p>
-                </div>
-                <ArrowRight className="h-5 w-5 text-[var(--muted-foreground)] transition-transform group-hover:translate-x-1 group-hover:text-[var(--warning)]" />
-              </CardContent>
-            </Card>
+<Link href="/plan">
+              <Card className="group cursor-pointer transition-all hover:border-[var(--warning)]/50 hover:shadow-lg hover:shadow-[var(--warning)]/5">
+                <CardContent className="flex items-center gap-4 p-6">
+                  <div className="rounded-2xl bg-[var(--warning)]/10 p-4 transition-colors group-hover:bg-[var(--warning)]/20">
+                    <TrendingUp className="h-6 w-6 text-[var(--warning)]" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold">Plan de Estudio</h3>
+                    <p className="text-sm text-[var(--muted-foreground)]">
+                      Cronograma personalizado para parciales
+                    </p>
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-[var(--muted-foreground)] transition-transform group-hover:translate-x-1 group-hover:text-[var(--warning)]" />
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </motion.section>
 
@@ -277,7 +302,7 @@ export default function HomePage() {
                               </div>
                             </div>
                             <Progress
-                              value={0}
+                              value={getSubjectProgress(subject.id)}
                               className="w-16"
                             />
                           </div>

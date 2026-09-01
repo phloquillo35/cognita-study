@@ -11,10 +11,17 @@ import {
   Brain,
   Target,
   ChevronRight,
+  ListChecks,
+  Award,
+  GraduationCap,
+  Library,
+  FileQuestion,
+  Sparkles,
+  BookMarked,
+  ChevronDown,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Progress } from "@/components/ui/Progress";
 import { getSubjectById, CATEGORY_COLORS, CATEGORY_LABELS } from "@/data/curriculum";
 import Link from "next/link";
 import type { SubjectCategory } from "@/types";
@@ -74,10 +81,12 @@ export default function SubjectPage() {
               {subject.code} • Nivel {subject.level}
             </p>
           </div>
-          <Button>
-            <Brain className="h-4 w-4 mr-2" />
-            Tutor IA
-          </Button>
+          <Link href={`/tutor?subject=${subject.id}`}>
+            <Button>
+              <Brain className="h-4 w-4 mr-2" />
+              Tutor IA
+            </Button>
+          </Link>
         </div>
       </header>
 
@@ -90,6 +99,25 @@ export default function SubjectPage() {
         >
           <Card>
             <CardContent className="p-6">
+              <p className="mb-5 text-[var(--muted-foreground)] leading-relaxed">
+                {subject.description}
+              </p>
+              <div className="mb-6">
+                <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                  <Sparkles className="h-4 w-4 text-[var(--primary)]" />
+                  Conceptos clave
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {subject.keyConcepts.map((concept) => (
+                    <span
+                      key={concept}
+                      className="rounded-full bg-[var(--primary)]/10 px-3 py-1 text-xs font-medium text-[var(--primary)]"
+                    >
+                      {concept}
+                    </span>
+                  ))}
+                </div>
+              </div>
               <div className="grid gap-6 sm:grid-cols-3">
                 <div className="flex items-center gap-3">
                   <div className="rounded-xl bg-[var(--primary)]/10 p-3">
@@ -208,6 +236,250 @@ export default function SubjectPage() {
           </div>
         </motion.section>
 
+        {/* Objetivos + Competencias */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="mt-8 grid gap-6 lg:grid-cols-2"
+        >
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+                <Target className="h-5 w-5 text-[var(--primary)]" />
+                Objetivos
+              </h3>
+              <ul className="space-y-3">
+                {subject.objectives.map((objective, i) => (
+                  <li key={i} className="flex gap-3 text-sm leading-relaxed">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
+                    <span>{objective}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+                <Award className="h-5 w-5 text-[var(--warning)]" />
+                Competencias
+              </h3>
+              <ul className="space-y-3">
+                {subject.competencies.map((competency, i) => (
+                  <li key={i} className="flex gap-3 text-sm leading-relaxed">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--warning)]" />
+                    <span>{competency}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </motion.section>
+
+        {/* Metodología + Evaluación */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-6 grid gap-6 lg:grid-cols-2"
+        >
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+                <GraduationCap className="h-5 w-5 text-[var(--cs)]" />
+                Metodología de cursada
+              </h3>
+              <div className="space-y-4 text-sm">
+                <div>
+                  <h4 className="mb-1 font-semibold">Teoría</h4>
+                  <p className="text-[var(--muted-foreground)] leading-relaxed">
+                    {subject.methodology.theory}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="mb-1 font-semibold">Práctica</h4>
+                  <p className="text-[var(--muted-foreground)] leading-relaxed">
+                    {subject.methodology.practice}
+                  </p>
+                </div>
+                {subject.methodology.activities.length > 0 && (
+                  <div>
+                    <h4 className="mb-2 font-semibold">Actividades</h4>
+                    <ul className="space-y-2">
+                      {subject.methodology.activities.map((activity, i) => (
+                        <li key={i} className="flex gap-2">
+                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--cs)]" />
+                          <span className="text-[var(--muted-foreground)]">
+                            {activity}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+                <ListChecks className="h-5 w-5 text-[var(--success)]" />
+                Forma de evaluación
+              </h3>
+              <div className="space-y-4 text-sm">
+                <div>
+                  <h4 className="mb-1 font-semibold">Regularidad</h4>
+                  <p className="text-[var(--muted-foreground)] leading-relaxed">
+                    {subject.evaluation.regularity}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="mb-1 font-semibold">Promoción</h4>
+                  <p className="text-[var(--muted-foreground)] leading-relaxed">
+                    {subject.evaluation.promotion}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="mb-1 font-semibold">Recuperatorio</h4>
+                  <p className="text-[var(--muted-foreground)] leading-relaxed">
+                    {subject.evaluation.recovery}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="mb-2 font-semibold">Criterios</h4>
+                  <ul className="space-y-2">
+                    {subject.evaluation.criteria.map((criterion, i) => (
+                      <li key={i} className="flex gap-2">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
+                        <span className="text-[var(--muted-foreground)]">
+                          {criterion}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.section>
+
+        {/* Bibliografía */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="mt-6"
+        >
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+                <Library className="h-5 w-5 text-[var(--math)]" />
+                Bibliografía
+              </h3>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div>
+                  <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--muted-foreground)]">
+                    <BookMarked className="h-4 w-4" />
+                    Oficial
+                  </h4>
+                  <ul className="space-y-2">
+                    {subject.bibliography.official.map((book, i) => (
+                      <li
+                        key={i}
+                        className="flex gap-2 text-sm text-[var(--muted-foreground)] leading-relaxed"
+                      >
+                        <span className="text-[var(--math)]">•</span>
+                        <span>{book}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--muted-foreground)]">
+                    <BookMarked className="h-4 w-4" />
+                    Complementaria
+                  </h4>
+                  <ul className="space-y-2">
+                    {subject.bibliography.complementary.map((book, i) => (
+                      <li
+                        key={i}
+                        className="flex gap-2 text-sm text-[var(--muted-foreground)] leading-relaxed"
+                      >
+                        <span className="text-[var(--cs)]">•</span>
+                        <span>{book}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.section>
+
+        {/* Ejercicios tipo parcial */}
+        {subject.partialExamples.length > 0 && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-6"
+          >
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="mb-1 flex items-center gap-2 text-lg font-semibold">
+                  <FileQuestion className="h-5 w-5 text-[var(--primary)]" />
+                  Ejercicios tipo parcial
+                </h3>
+                <p className="mb-5 text-sm text-[var(--muted-foreground)]">
+                  Preguntas oficiales con resolución para practicar antes del
+                  examen.
+                </p>
+                <div className="space-y-4">
+                  {subject.partialExamples.map((example, i) => (
+                    <details
+                      key={i}
+                      className="group rounded-xl border border-[var(--border)] bg-[var(--secondary)]/50 transition-colors open:border-[var(--primary)]/30"
+                    >
+                      <summary className="flex cursor-pointer items-center gap-3 p-4 text-sm font-medium">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--primary)]" />
+                        <span className="flex-1">{example.topic}</span>
+                        <span className="flex gap-0.5">
+                          {Array.from({ length: 5 }).map((_, j) => (
+                            <div
+                              key={j}
+                              className={`h-1.5 w-1.5 rounded-full ${
+                                j < example.difficulty
+                                  ? "bg-[var(--primary)]"
+                                  : "bg-[var(--secondary)]"
+                              }`}
+                            />
+                          ))}
+                        </span>
+                        <ChevronDown className="h-4 w-4 text-[var(--muted-foreground)] transition-transform group-open:rotate-180" />
+                      </summary>
+                      <div className="space-y-2 border-t border-[var(--border)] p-4 text-sm">
+                        <p className="leading-relaxed">
+                          <span className="font-semibold">Pregunta:</span>{" "}
+                          <span className="text-[var(--muted-foreground)]">
+                            {example.question}
+                          </span>
+                        </p>
+                        <p className="leading-relaxed">
+                          <span className="font-semibold">Solución:</span>{" "}
+                          <span className="text-[var(--muted-foreground)]">
+                            {example.solution}
+                          </span>
+                        </p>
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.section>
+        )}
+
         {/* Quick Actions */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -215,6 +487,7 @@ export default function SubjectPage() {
           transition={{ delay: 0.4 }}
           className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
         >
+          <Link href={`/tutor?subject=${subject.id}`}>
           <Card className="group cursor-pointer transition-all hover:border-[var(--primary)]/50 hover:shadow-lg hover:shadow-[var(--primary)]/5">
             <CardContent className="flex items-center gap-4 p-6">
               <div className="rounded-2xl bg-[var(--primary)]/10 p-4">
@@ -229,6 +502,7 @@ export default function SubjectPage() {
               <ChevronRight className="h-5 w-5 text-[var(--muted-foreground)] transition-transform group-hover:translate-x-1" />
             </CardContent>
           </Card>
+        </Link>
 
           <Card className="group cursor-pointer transition-all hover:border-[var(--success)]/50 hover:shadow-lg hover:shadow-[var(--success)]/5">
             <CardContent className="flex items-center gap-4 p-6">

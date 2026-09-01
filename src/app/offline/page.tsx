@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 
 export default function OfflinePage() {
-  const [isOnline, setIsOnline] = useState(false);
+  const [isOnline, setIsOnline] = useState(
+    () => typeof navigator !== "undefined" && navigator.onLine
+  );
 
   useEffect(() => {
-    setIsOnline(navigator.onLine);
-
     const handleOnline = () => setIsOnline(true);
     window.addEventListener("online", handleOnline);
     return () => window.removeEventListener("online", handleOnline);

@@ -93,6 +93,7 @@ model Subject {
   notes         Note[]
   flashcards    Flashcard[]
   studyPlans    StudyPlan[]
+  chatMessages  ChatMessage[]
 
   @@map("subjects")
 }
@@ -105,10 +106,10 @@ model Topic {
   difficulty      Int
   estimatedMinutes Int
 
-  subject    Subject          @relation(fields: [subjectId], references: [id])
+subject    Subject          @relation(fields: [subjectId], references: [id])
   exercises  Exercise[]
   progress   UserProgress[]
-  chatHistory ChatMessage[]
+  chatMessages ChatMessage[]
 
   @@map("topics")
 }
