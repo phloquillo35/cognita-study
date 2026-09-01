@@ -145,7 +145,8 @@ cognita-study/
 
 ### 1. Dashboard Principal (`/`)
 - Bento Grid con estadísticas del estudiante
-- **Stats conectadas a datos reales**: materia totales, ejercicios resueltos, racha de días y horas de estudio provenientes de `useStudySessionStore` (localStorage)
+- **Stats conectadas a datos reales**: materias totales (36), ejercicios resueltos, racha de días y horas de estudio provenientes de `useStudySessionStore` (localStorage)
+- **Las sesiones de estudio se registran automáticamente** desde: Práctica (ejercicios + tiempo real), Flashcards (cada review) y Tutor (cada consulta)
 - **Progreso por materia en vivo**: la barra `Progress` de cada materia refleja el % de temas completados del plan de estudio
 - Grid del plan de estudios (36 materias por nivel)
 - Quick actions: Ir al Tutor, Practicar, Plan de Estudio (navegables)
@@ -177,6 +178,7 @@ cognita-study/
 - 20 flashcards de ejemplo precargadas
 - Selector de materia
 - Formulario para crear nuevas flashcards
+- Cada review registra actividad en `studySessionStore` (alimenta racha/horas del dashboard)
 
 ### 5. Apuntes y Notas (`/notes`)
 - CRUD completo de notas
@@ -296,7 +298,13 @@ Cada una de las 36 materias incluye:
 
 ## Commits Realizados
 
-### Hoy — Sesión de Desarrollo
+### Sesión Actual — Jornada de Desarrollo (1 de septiembre 2026)
+
+| # | Hash | Descripción |
+|---|------|-------------|
+| 1 | `ae5a659` | feat: auth email/password, tutor conectado, dashboard con progreso real, UI rica de materia y generador de ejercicios para las 36 materias |
+
+### Historia Prevía
 
 | # | Hash | Descripción |
 |---|------|-------------|
@@ -305,6 +313,7 @@ Cada una de las 36 materias incluye:
 | 3 | `6885a76` | feat: rewrite curriculum with official Plan 1877 - 36 subjects with real data |
 | 4 | `8190e3a` | feat: add bibliography, methodology, evaluation, objectives, competencies and partial examples to all 36 subjects |
 | 5 | `e544380` | chore: remove helper script |
+| 6 | `baa41f4` | docs: add comprehensive AGENTS.md with full project summary |
 
 ---
 
@@ -415,7 +424,7 @@ DATABASE_URL=postgresql://...
 
 ---
 
-*Última actualización: 26 de agosto de 2026*
+*Última actualización: 1 de septiembre de 2026*
 *Desarrollado por: opencode (big-pickle model)*
 *Repositorio: https://github.com/phloquillo35/cognita-study*
 
