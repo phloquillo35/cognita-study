@@ -1,98 +1,49 @@
-# AGENTS.md (Workflow Context) — cognita-study
-> Generado: 2026-08-29 22:36:20 · Herramienta: opencode · Proyecto: /Users/pablohernandezcanelo/Documents/cognita-study
+# Cognita Study — Resumen del Proyecto
 
-## 🎯 Objetivo actual
-Loop6 DONE 6/6 — lint 0w, RAG 2 routes, calendario filter, PWA v2, rateLimit, E2E 5, prod htcavcq7f 29 routes
+Plataforma de estudio universitario con inteligencia artificial para la carrera de **Licenciatura en Sistemas de Información** — UTN Facultad Regional Tucumán (Plan 2023, Ordenanza 1877).
 
-## 📍 Estado actual
-  Branch: main · Working tree: SUCIO (1 archivos)
+---
 
-  Cambios sin commit:
-   AGENTS.md | 86 ++-------------------------------------------------------------
-   1 file changed, 2 insertions(+), 84 deletions(-)
-   M AGENTS.md
+## Información General
 
-  Últimos commits:
-  8f39be3 docs(loop6): F6 GREEN — deploy htcavcq7f prod RAG 200, 29 routes, 60 tests
-  113c3b7 feat(loop6): F1-F5 lint 0w, RAG, calendario filter, PWA v2, rateLimit 4 routes, E2E 5
-  c6e7fe2 docs: AGENTS.md Loop5 handoff — Calendario FSRS prod
-  c60224e feat(calendar): Loop5 — Calendario FSRS mensual
-  3877e65 docs: AGENTS.md Loop4 handoff
+| Campo | Valor |
+|-------|-------|
+| **Nombre** | Cognita Study |
+| **URL GitHub** | https://github.com/phloquillo35/cognita-study |
+| **Universidad** | UTN - Facultad Regional Tucumán |
+| **Carrera** | Licenciatura en Sistemas de Información |
+| **Plan** | Plan 2023 (Ordenanza 1877) |
+| **Total materias** | 36 obligatorias + Electivas |
+| **Total horas carrera** | 3,992 horas + 200h Práctica Profesional Supervisada |
+| **Niveles** | 5 niveles (5 años) |
 
-## ✅ Tareas activas
-  (sin tareas activas)
+---
 
-## 🧭 Próximo paso
-_(continuar donde quedó opencode. Si hay tareas in_progress arriba, retomar la primera.)_
+## Tech Stack
 
-## 🧱 Archivos clave / arquitectura
-  .
-.env.example
-.env.local
-.vercel
-.vercel/project.json
-.vercel/README.txt
-AGENTS.md
-CLAUDE.md
-e2e
-e2e/smoke.spec.ts
-eslint.config.mjs
-LOOP.md
-next-env.d.ts
-next.config.ts
-package-lock.json
-package.json
-playwright.config.ts
-postcss.config.mjs
-prisma
-prisma/schema.prisma
-public
-public/file.svg
-public/globe.svg
-public/icons
-public/manifest.json
-public/next.svg
-public/sw.js
-public/vercel.svg
-public/window.svg
-README.md
-scripts
-scripts/extract-texts.ts
-scripts/sync-drive.ts
-src
-src/app
-src/components
-src/data
-src/lib
-src/stores
-src/types
-test-results
-test-results/.last-run.json
-tsconfig.json
-tsconfig.tsbuildinfo
-vitest.config.ts
+### Frontend
+| Tecnología | Versión | Uso |
+|-----------|---------|-----|
+| Next.js | 16.3.3 | Framework React (App Router + Turbopack) |
+| React | 19.x | UI library |
+| TypeScript | 5.x | Type safety |
+| Tailwind CSS | 4.x | Utility-first CSS |
+| Framer Motion | 12.x | Animaciones y transiciones |
+| Lucide React | - | Iconografía |
+| KaTeX | - | Renderizado de LaTeX/Matemática |
+| date-fns | - | Manipulación de fechas |
 
-## 🔐 Variables de entorno requeridas
-  Nombres de variables (sin valores):
-    DATABASE_URL
-    GITHUB_ID
-    GITHUB_SECRET
-    GOOGLE_CLIENT_ID
-    GOOGLE_CLIENT_SECRET
-    NEXTAUTH_SECRET
-    NEXTAUTH_URL
-    OPENAI_API_KEY
+### State Management
+| Tecnología | Uso |
+|-----------|-----|
+| Zustand | Global state + localStorage persistence |
 
-## 📦 Comandos útiles
-  Scripts disponibles:
-    dev: next dev
-    build: next build
-    start: next start
-    lint: eslint
-    test: vitest run
-    test:e2e: playwright test
-    postinstall: prisma generate
-    typecheck: npx tsc --noEmit
+### UI Components
+| Tecnología | Uso |
+|-----------|-----|
+| Radix UI | Primitivas accesibles (Dialog, Dropdown, Tabs, Progress, etc.) |
+| CVA (Class Variance Authority) | Variantes de componentes |
+| clsx + tailwind-merge | Utilidades de clases |
 
 ### Backend / API
 | Tecnología | Uso |
@@ -347,25 +298,20 @@ Cada una de las 36 materias incluye:
 
 ## Commits Realizados
 
-### Sesión Actual — Merge completo (1 de septiembre 2026)
+### Sesión Actual — Jornada de Desarrollo (1 de septiembre 2026)
 
 | # | Hash | Descripción |
 |---|------|-------------|
 | 1 | `ae5a659` | feat: auth email/password, tutor conectado, dashboard con progreso real, UI rica de materia y generador de ejercicios para las 36 materias |
-| 2 | `7752f98` | `merge origin/main`: unifica la línea local (auth email, tutor con curriculum, generador 36 materias, dashboard real) con Loops 5-6 (RAG, calendario FSRS, examen, focus, PWA v2, rateLimit, 60 tests, deploy prod) |
+| 2 | `9297e0e` | docs: update AGENTS.md with session summary and complete pending list |
+| 3 | `7752f98` | Merge remote-tracking branch 'origin/main' (conflicto AGENTS.md + tutor/practice/subject/login) |
+| 4 | `ca45315` | docs: AGENTS.md register merge hash 7752f98 and updated pending list |
+| 5 | `2a76842` | chore: remove unused GeneratedExercise import in practice |
+
+> ⚠️ Nota 2026-09-01 18:41: el merge `7752f98` había pisado este AGENTS.md (volvió al template Loop6). Restaurado desde `9297e0e` y actualizado acá. El archivo en `origin/main` quedó viejo — este commit lo corrige.
 
 ### Historia Prevía
 
-#### Rama remota — Loops 5 y 6 (otra sesión)
-| # | Hash | Descripción |
-|---|------|-------------|
-| 1 | `c60224e` | feat(calendar): Loop5 — Calendario FSRS mensual |
-| 2 | `c6e7fe2` | docs: AGENTS.md Loop5 handoff — Calendario FSRS prod |
-| 3 | `113c3b7` | feat(loop6): F1-F5 lint 0w, RAG, calendario filter, PWA v2, rateLimit 4 routes, E2E 5 |
-| 4 | `8f39be3` | docs(loop6): F6 GREEN — deploy htcavcq7f prod RAG 200, 29 routes, 60 tests |
-| 5 | `5b776cd` | docs: AGENTS.md Loop6 handoff 6/6 |
-
-#### Rama local — línea de desarrollo anterior
 | # | Hash | Descripción |
 |---|------|-------------|
 | 1 | `42e86f1` | feat: initial setup - Cognita Study |
@@ -379,35 +325,36 @@ Cada una de las 36 materias incluye:
 
 ## Lo que Queda Pendiente
 
-### ⭐ PENDIENTE URGENTE — Activar base de datos (login/registro + persistencia real)
-El código está listo (CredentialsProvider + `/api/register` + formulario email/contraseña en `/login`), pero falta configurar `DATABASE_URL` desde la computadora del usuario (tiene el connection string de Supabase en su casa):
+### ⭐ PENDIENTE URGENTE — Login/Registro con email (falta configurar la base de datos)
+El código ya está listo (CredentialsProvider + endpoint `/api/register` + formulario email/contraseña en `/login`). Falta únicamente configurar la base de datos desde la computadora del usuario (tiene el connection string de Supabase en su casa):
 
 - [ ] **1. Agregar `DATABASE_URL` en `.env.local`** (Supabase/PostgreSQL):
       - Supabase Dashboard → Settings → Database → Connection string
       - Pegar el string (formato: `postgresql://...pooler.supabase.com:6543/postgres`) en `.env.local`
 - [ ] **2. Crear las tablas** ejecutando: `npx prisma db push`
 - [ ] **3. Reiniciar el servidor** (`npm run dev`) y ya podrás crear cuenta con email/contraseña
-- [ ] (Opcional) Agregar `OPENAI_API_KEY` para activar el tutor IA real (sin esto usa mock socrático con el material del curriculum y RAG)
+- [ ] (Opcional) Agregar `OPENAI_API_KEY` para activar el tutor IA real (sin esto usa mock socrático con el material del curriculum)
 
 ### Prioridad Alta
 - [x] **Login por email/contraseña**: Implementado (CredentialsProvider + registro en `/api/register`)
-- [x] **Tutor IA conectado + curriculum**: La UI `/tutor` consume `/api/tutor` (GPT-4o-mini streaming + fallback mock) inyectando temario, bibliografía, objetivos y parciales según `subjectId`
-- [x] **RAG con upload de PDFs**: `/api/rag/upload` + `/api/rag/search` con subida de PDF/DOCX/TXT en el tutor (traído del remoto Loop6)
-- [x] **Calendario FSRS**: `/calendar` con repetición espaciada mensual (remoto Loop5)
-- [x] **Dashboard con progreso real**: Stats conectadas a `studySessionStore` + `streakStore` + progreso por materia desde `studyPlanStore`
-- [x] **Generador de ejercicios desde el temario**: `exerciseGenerator.ts` genera 8 ejercicios por materia para las 36 materias (offline, sin duplicados)
-- [x] **Tests + deploy**: Vitest (60 tests) + Playwright E2E + deploy prod en Vercel (remoto Loop6)
-- [ ] **Conectar IA real**: Configurar `OPENAI_API_KEY` en `.env.local`
+- [x] **Tutor IA conectado**: La UI `/tutor` consume `/api/tutor` con streaming real (OpenAI GPT-4o-mini) y fallback mock. Inyecta el material del curriculum (temario, bibliografía, objetivos, ejercicios tipo parcial) según `subjectId`.
+- [x] **Mostrar datos nuevos en UI**: `/subject/[id]` ya muestra bibliografía, metodología, evaluación, objetivos, competencias y ejercicios tipo parcial
+- [ ] **Conectar IA real**: Configurar `OPENAI_API_KEY` en `.env.local` para activar el tutor streaming (sin esto usa mock)
 - [ ] **PostgreSQL database**: (ver pasos urgentes arriba) ejecutar `npx prisma db push`
 - [ ] **Login OAuth funcional**: Configurar credenciales de GitHub OAuth y Google OAuth en NextAuth (opcional si usás email)
 
 ### Prioridad Media
+- [x] **Dashboard con progreso real**: Stats conectadas a `studySessionStore` (ejercicios, racha, horas) y progreso por materia desde `studyPlanStore`
+- [x] **Generador de ejercicios desde el temario**: `exerciseGenerator.ts` genera 8 ejercicios por materia para las 36 materias (distractores de otras materias, sin duplicados)
 - [ ] **Generador de ejercicios con IA**: Usar OpenAI para variar/ampliar los ejercicios generados
+- [ ] **Subida de PDFs**: Implementar upload de apuntes/PDFs con RAG
 - [ ] **Flashcards con IA**: Generar flashcards automáticamente desde el temario
-- [ ] **Estadísticas avanzadas**: Gráficos de progreso, heatmap de estudio, streaks advanced
+- [ ] **Estadísticas avanzadas**: Gráficos de progreso, heatmap de estudio, streaks
 
 ### Prioridad Baja
 - [ ] **PWA icons**: Crear iconos 192x192 y 512x512 para manifest
+- [ ] **Tests unitarios**: Agregar test suite con Vitest/Jest
+- [ ] **Deploy en Vercel**: Configurar CI/CD
 - [ ] **Notificaciones push**: Alertas de estudio y recordatorios
 - [ ] **Modo oscuro/claro automático**: Seguir preferencias del sistema
 - [ ] **Internacionalización**: Soporte español/inglés
