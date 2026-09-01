@@ -430,7 +430,7 @@ DATABASE_URL=postgresql://...
 
 ---
 
-*Última actualización: 1 de septiembre de 2026*
+*Última actualización: 1 de septiembre de 2026 — cierre de día: pull + fix AGENTS.md (fc2fa1e) — handoff guardado en ~/.opencode/handoff/cognita-study-20260901-184528.md*
 *Desarrollado por: opencode (big-pickle model)*
 *Repositorio: https://github.com/phloquillo35/cognita-study*
 
