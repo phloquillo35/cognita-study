@@ -23,7 +23,6 @@ import { useStudySessionStore } from "@/stores/studySessionStore";
 import {
   generateExercises,
   getSubjectsForPractice,
-  type GeneratedExercise,
 } from "@/lib/exerciseGenerator";
 import Link from "next/link";
 
