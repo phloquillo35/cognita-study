@@ -325,22 +325,21 @@ Cada una de las 36 materias incluye:
 
 ## Lo que Queda Pendiente
 
-### ⭐ PENDIENTE URGENTE — Login/Registro con email (falta configurar la base de datos)
-El código ya está listo (CredentialsProvider + endpoint `/api/register` + formulario email/contraseña en `/login`). Falta únicamente configurar la base de datos desde la computadora del usuario (tiene el connection string de Supabase en su casa):
-
-- [ ] **1. Agregar `DATABASE_URL` en `.env.local`** (Supabase/PostgreSQL):
-      - Supabase Dashboard → Settings → Database → Connection string
-      - Pegar el string (formato: `postgresql://...pooler.supabase.com:6543/postgres`) en `.env.local`
-- [ ] **2. Crear las tablas** ejecutando: `npx prisma db push`
-- [ ] **3. Reiniciar el servidor** (`npm run dev`) y ya podrás crear cuenta con email/contraseña
-- [ ] (Opcional) Agregar `OPENAI_API_KEY` para activar el tutor IA real (sin esto usa mock socrático con el material del curriculum)
+### ✅ COMPLETADO — Supabase + Vercel prod-ready (2026-09-01 noche)
+- [x] **Dual URL** `DATABASE_URL` (pooler 6543 `?pgbouncer=true`) + `DIRECT_URL` (5432) en `.env.local`, `.env` y Vercel (8 vars: 4 prod + 4 preview)
+- [x] **`prisma/schema.prisma` con `directUrl = env("DIRECT_URL")`** y `npx prisma db push` OK (8.05s) — FK `notes` limpiada (2 huérfanos)
+- [x] **`getPrisma()` graceful único** en `src/lib/prisma.ts` (singleton `globalThis`, `null` sin `DATABASE_URL` → fallback localStorage), `src/lib/db.ts` shim, `auth.ts` + `/api/register` migrados
+- [x] **`.env.example` dual** documentado, `scripts/setup-env.sh` portable + `docs/SUPABASE_VERCEL.md` clonable
+- [x] **`NEXTAUTH_SECRET` rotado** (44 chars, `openssl rand -base64 32`) local `.env` + `.env.local` + Vercel prod/preview (API para preview)
+- [x] **Smoke `/api/register` local 201 OK** (port 3001) + 409 duplicado verificado
+- [ ] (Opcional) Agregar `OPENAI_API_KEY` para activar el tutor IA real (sin esto usa mock socrático)
 
 ### Prioridad Alta
 - [x] **Login por email/contraseña**: Implementado (CredentialsProvider + registro en `/api/register`)
 - [x] **Tutor IA conectado**: La UI `/tutor` consume `/api/tutor` con streaming real (OpenAI GPT-4o-mini) y fallback mock. Inyecta el material del curriculum (temario, bibliografía, objetivos, ejercicios tipo parcial) según `subjectId`.
 - [x] **Mostrar datos nuevos en UI**: `/subject/[id]` ya muestra bibliografía, metodología, evaluación, objetivos, competencias y ejercicios tipo parcial
-- [ ] **Conectar IA real**: Configurar `OPENAI_API_KEY` en `.env.local` para activar el tutor streaming (sin esto usa mock)
-- [ ] **PostgreSQL database**: (ver pasos urgentes arriba) ejecutar `npx prisma db push`
+ - [ ] **Conectar IA real**: Configurar `OPENAI_API_KEY` en `.env.local` para activar el tutor streaming (sin esto usa mock)
+- [x] **PostgreSQL database**: Supabase sync OK — `npx prisma db push` ejecutado, smoke `/api/register` 201 + Vercel 8 env vars
 - [ ] **Login OAuth funcional**: Configurar credenciales de GitHub OAuth y Google OAuth en NextAuth (opcional si usás email)
 
 ### Prioridad Media
@@ -354,7 +353,8 @@ El código ya está listo (CredentialsProvider + endpoint `/api/register` + form
 ### Prioridad Baja
 - [ ] **PWA icons**: Crear iconos 192x192 y 512x512 para manifest
 - [ ] **Tests unitarios**: Agregar test suite con Vitest/Jest
-- [ ] **Deploy en Vercel**: Configurar CI/CD
+ - [x] **Deploy en Vercel**: 8 env vars prod+preview, alias `https://cognita-study.vercel.app` (deploy `htcavcq7f`), build 29 routes OK
+  - Patrón clonable: `docs/SUPABASE_VERCEL.md` + `scripts/setup-env.sh`
 - [ ] **Notificaciones push**: Alertas de estudio y recordatorios
 - [ ] **Modo oscuro/claro automático**: Seguir preferencias del sistema
 - [ ] **Internacionalización**: Soporte español/inglés
@@ -371,18 +371,22 @@ cd cognita-study
 # 2. Instalar dependencias
 npm install
 
-# 3. Configurar variables de entorno
+# 3. Configurar variables de entorno (dual URL Supabase)
 cp .env.example .env.local
-# Editar .env.local con tus API keys
+# Editar .env.local con DATABASE_URL (6543 pooler) + DIRECT_URL (5432) + NEXTAUTH_SECRET
+./scripts/setup-env.sh   # valida + crea .env para Prisma
 
-# 4. Ejecutar en desarrollo
+# 4. Sincronizar DB (una vez)
+npx prisma db push
+
+# 5. Ejecutar en desarrollo
 npm run dev
 
-# 5. Abrir en el navegador
+# 6. Abrir en el navegador
 # http://localhost:3000
 ```
 
-### Variables de Entorno Requeridas
+### Variables de Entorno (dual URL — ver docs/SUPABASE_VERCEL.md)
 
 ```env
 # IA (opcional - sin esto usa mock responses)
@@ -390,7 +394,7 @@ OPENAI_API_KEY=sk-...
 
 # NextAuth
 NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=tu-secret-aqui
+NEXTAUTH_SECRET=openssl-rand-base64-32
 
 # OAuth (opcional)
 GITHUB_ID=...
@@ -398,8 +402,9 @@ GITHUB_SECRET=...
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 
-# Database (opcional - sin esto usa localStorage)
-DATABASE_URL=postgresql://...
+# Database Supabase — dual (ver docs/SUPABASE_VERCEL.md)
+DATABASE_URL=postgresql://...pooler.supabase.com:6543/postgres?pgbouncer=true
+DIRECT_URL=postgresql://...db.supabase.co:5432/postgres
 ```
 
 ---
@@ -430,7 +435,7 @@ DATABASE_URL=postgresql://...
 
 ---
 
-*Última actualización: 1 de septiembre de 2026 — cierre de día: pull + fix AGENTS.md (fc2fa1e) — handoff guardado en ~/.opencode/handoff/cognita-study-20260901-184528.md*
+*Última actualización: 1 sep 2026 noche — feat(db) getPrisma+directUrl (2e1df89), SUPABASE_VERCEL.md + setup-env.sh, NEXTAUTH_SECRET rotado, db push OK, smoke local 201*
 *Desarrollado por: opencode (big-pickle model)*
 *Repositorio: https://github.com/phloquillo35/cognita-study*
 
