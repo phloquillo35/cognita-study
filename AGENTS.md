@@ -435,7 +435,7 @@ DIRECT_URL=postgresql://...db.supabase.co:5432/postgres
 
 ---
 
-*Última actualización: 1 sep 2026 noche — feat(db) getPrisma+directUrl (2e1df89), SUPABASE_VERCEL.md + setup-env.sh, NEXTAUTH_SECRET rotado, db push OK, smoke local 201*
+*Última actualización: 2 sep 2026 00:03 — cierre de día: Supabase+Vercel prod-ready (5ed8fa4), deploy 62rlmpcx4 Ready + smoke prod 201, handoff 000354 guardado*
 *Desarrollado por: opencode (big-pickle model)*
 *Repositorio: https://github.com/phloquillo35/cognita-study*
 
