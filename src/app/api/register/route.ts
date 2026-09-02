@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: NextRequest) {
   try {
+    const prisma = await getPrisma();
+    if (!prisma) {
+      return NextResponse.json(
+        { error: "Base de datos no configurada" },
+        { status: 503 }
+      );
+    }
+
     const { name, email, password } = await request.json();
 
     if (!email || !password) {
