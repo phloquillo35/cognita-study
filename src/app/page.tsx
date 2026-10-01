@@ -139,7 +139,7 @@ export default function HomePage() {
             <strong>{CURRICULUM.career}</strong> —{" "}
             {CURRICULUM.university}
           </p>
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-3">
               <Link href="/tutor">
                 <Button size="lg" className="gap-2">
                   <Zap className="h-5 w-5" />

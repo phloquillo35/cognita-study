@@ -151,7 +151,7 @@ export default function ExamPage() {
             {items.length} ítems disponibles (flashcards pendientes + quizzes
             generados). Al terminar, repasamos tus puntos débiles.
           </p>
-          <div className="flex justify-center gap-3">
+          <div className="flex flex-wrap justify-center gap-3">
             <Button size="lg" onClick={() => reset(false)} disabled={items.length === 0}>
               <Trophy className="h-4 w-4 mr-1" />
               Comenzar ({items.length})
@@ -218,7 +218,7 @@ export default function ExamPage() {
             </Card>
           )}
 
-          <div className="flex justify-center gap-3">
+          <div className="flex flex-wrap justify-center gap-3">
             {weak.length > 0 && (
               <Button onClick={() => reset(true)}>
                 <RotateCcw className="h-4 w-4 mr-1" />

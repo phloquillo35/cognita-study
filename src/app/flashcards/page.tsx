@@ -350,7 +350,7 @@ logSession(0, 1, quality >= 3 ? 1 : 0);
         {/* Controls */}
         <div className="mb-8 flex flex-wrap items-center gap-4">
           {/* Subject selector */}
-          <div className="relative">
+          <div className="relative min-w-0 max-w-full">
             <select
               value={selectedSubject}
               onChange={(e) => {
@@ -359,7 +359,7 @@ logSession(0, 1, quality >= 3 ? 1 : 0);
                 setIsFlipped(false);
                 setReviewedCount(0);
               }}
-              className="appearance-none rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 pr-10 text-sm font-medium text-[var(--card-foreground)] transition-colors hover:border-[var(--primary)]/50 focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+              className="max-w-full appearance-none rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 pr-10 text-sm font-medium text-[var(--card-foreground)] transition-colors hover:border-[var(--primary)]/50 focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
             >
               <option value="all">Todas las materias</option>
               {ALL_SUBJECTS.map((subject) => (
@@ -436,11 +436,11 @@ logSession(0, 1, quality >= 3 ? 1 : 0);
                       <label className="mb-1.5 block text-sm font-medium text-[var(--foreground)]">
                         Materia
                       </label>
-                      <div className="relative">
+                      <div className="relative min-w-0 max-w-full">
                         <select
                           value={newSubject}
                           onChange={(e) => setNewSubject(e.target.value)}
-                          className="w-full appearance-none rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 pr-10 text-sm text-[var(--foreground)] transition-colors hover:border-[var(--primary)]/50 focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
+                          className="w-full max-w-full appearance-none rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 pr-10 text-sm text-[var(--foreground)] transition-colors hover:border-[var(--primary)]/50 focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
                         >
                           {ALL_SUBJECTS.map((subject) => (
                             <option key={subject.id} value={subject.id}>
