@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* El tema se cambia con la clase .dark (next-themes), no con prefers-color-scheme:
+   sin esto las utilidades dark: (p. ej. dark:prose-invert) nunca se activan. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #FAFBFC;
   --foreground: #0A0A0F;

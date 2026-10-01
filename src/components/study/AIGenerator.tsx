@@ -129,11 +129,11 @@ export default function AIGenerator({
         />
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
+          <div className="relative min-w-0 max-w-full">
             <select
               value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
-              className="appearance-none rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 pr-10 text-sm text-[var(--foreground)] transition-colors focus:border-[var(--primary)] focus:outline-none"
+              className="max-w-full appearance-none rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 pr-10 text-sm text-[var(--foreground)] transition-colors focus:border-[var(--primary)] focus:outline-none"
             >
               {ALL_SUBJECTS.map((s) => (
                 <option key={s.id} value={s.id}>

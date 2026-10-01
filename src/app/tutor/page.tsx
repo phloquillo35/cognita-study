@@ -204,7 +204,7 @@ function TutorChat() {
   return (
     <div className="flex h-screen flex-col bg-[var(--background)]">
       {/* Header */}
-      <header className="flex items-center gap-4 border-b border-[var(--border)] bg-[var(--background)]/80 px-4 py-3 backdrop-blur-xl">
+      <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-[var(--border)] bg-[var(--background)]/80 px-4 py-3 backdrop-blur-xl">
         <Link href="/" className="flex items-center gap-2">
           <ArrowLeft className="h-5 w-5" />
           <span>Volver al inicio</span>
@@ -221,13 +221,13 @@ function TutorChat() {
             <span className="text-xs text-[var(--warning)] font-medium ml-2">Modo Demo</span>
           </div>
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <div className="relative">
+        <div className="ml-auto flex min-w-0 max-w-full flex-wrap items-center gap-2">
+          <div className="relative min-w-0 max-w-full">
             <select
               value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
               aria-label="Materia del tutor"
-              className="appearance-none rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 pr-8 text-sm text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none"
+              className="max-w-full appearance-none rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 pr-8 text-sm text-[var(--foreground)] focus:border-[var(--primary)] focus:outline-none"
             >
               {ALL_SUBJECTS.map((s) => (
                 <option key={s.id} value={s.id}>

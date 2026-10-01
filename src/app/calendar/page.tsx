@@ -116,7 +116,7 @@ function CalendarInner() {
             role="combobox"
             value={selectedSubject}
             onChange={(e) => handleSubjectChange(e.target.value)}
-            className="h-9 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+            className="h-9 max-w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
           >
             <option value="all">Todas las materias</option>
             {ALL_SUBJECTS.map((s) => (
